@@ -1,0 +1,178 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/entities/user_status.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../providers/user_provider.dart';
+import '../../../../core/constants/app_spacing.dart';
+
+class CreateUserScreen extends ConsumerStatefulWidget {
+  const CreateUserScreen({super.key});
+
+  @override
+  ConsumerState<CreateUserScreen> createState() => _CreateUserScreenState();
+}
+
+class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _userNameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  DateTime _dateOfBirth = DateTime(DateTime.now().year - 25);
+  Gender _gender = Gender.other;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _userNameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateOfBirth,
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _dateOfBirth = picked);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _submitting = true);
+    final error = await ref
+        .read(userListControllerProvider.notifier)
+        .createUser(
+          userName: _userNameController.text.trim(),
+          password: _passwordController.text,
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          gender: _gender,
+          dateOfBirth: _dateOfBirth,
+        );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User created'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create User')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.s20),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    controller: _firstNameController,
+                    label: 'First Name',
+                    validator: (v) =>
+                        Validators.required(v, label: 'First name'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: CustomTextField(
+                    controller: _lastNameController,
+                    label: 'Last Name',
+                    validator: (v) =>
+                        Validators.required(v, label: 'Last name'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            CustomTextField(
+              controller: _userNameController,
+              label: 'Username',
+              validator: (v) => Validators.required(v, label: 'Username'),
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            CustomTextField(
+              controller: _passwordController,
+              label: 'Password',
+              obscureText: true,
+              validator: Validators.password,
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            CustomTextField(
+              controller: _emailController,
+              label: 'Email',
+              keyboardType: TextInputType.emailAddress,
+              validator: Validators.email,
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            CustomTextField(
+              controller: _phoneController,
+              label: 'Phone',
+              keyboardType: TextInputType.phone,
+              validator: Validators.phone,
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            DropdownButtonFormField<Gender>(
+              initialValue: _gender,
+              decoration: const InputDecoration(labelText: 'Gender'),
+              items: Gender.values
+                  .map((g) => DropdownMenuItem(value: g, child: Text(g.label)))
+                  .toList(),
+              onChanged: (v) => setState(() => _gender = v ?? _gender),
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            InkWell(
+              onTap: _pickDate,
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Date of Birth'),
+                child: Text(
+                  '${_dateOfBirth.year}-${_dateOfBirth.month.toString().padLeft(2, '0')}-${_dateOfBirth.day.toString().padLeft(2, '0')}',
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s24),
+            ElevatedButton(
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? const SizedBox(
+                      height: AppSpacing.s20,
+                      width: AppSpacing.s20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Create User'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

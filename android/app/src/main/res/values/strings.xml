@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">travel_app</string>
+
+    <!-- Facebook Login credentials — from developers.facebook.com, your app
+         -> Settings -> Basic (App ID) and Settings -> Advanced -> Security
+         (Client Token). These are the values that actually configure the
+         native Facebook SDK; paste your real ones in below. -->
+    <string name="facebook_app_id">940138601918797</string>
+    <string name="fb_login_protocol_scheme">fb940138601918797</string>
+    <string name="facebook_client_token">8ad60c4ebf21a956891a202bfb0665b0</string>
+</resources>

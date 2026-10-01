@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
@@ -189,7 +188,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                     TextButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () async {
+                        await ref.read(authControllerProvider.notifier).login();
+                      },
                       child: const Text('Sign In'),
                     ),
                   ],

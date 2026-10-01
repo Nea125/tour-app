@@ -20,6 +20,7 @@ abstract class UserRepository {
     required String email,
     required String phone,
     required Gender gender,
+    required String role,
     required DateTime dateOfBirth,
   });
   Future<Result<AppUser>> updateProfile({
@@ -29,6 +30,7 @@ abstract class UserRepository {
     String? phone,
     String? profileImage,
     Gender? gender,
+    String? role,
     DateTime? dateOfBirth,
   });
   Future<Result<void>> setUserStatus(String id, UserStatus status);

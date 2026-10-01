@@ -23,7 +23,7 @@ class GuideListScreen extends ConsumerWidget {
     final guidesAsync = ref.watch(guideListControllerProvider);
     final user = ref.watch(currentUserProvider);
     final canManage =
-        user?.role == UserRole.admin || user?.role == UserRole.tourManager;
+        user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       appBar: AppBar(

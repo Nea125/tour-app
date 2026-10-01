@@ -21,13 +21,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-/// Holds the current session. `null` data means signed-out; `AsyncLoading`
-/// covers app-launch session restoration and in-flight auth calls.
+
 class AuthController extends AsyncNotifier<AppUser?> {
   @override
   Future<AppUser?> build() async {
-    // A refresh token rejected mid-session (revoked, idle timeout) signs
-    // the user out and lets the router send them back to login.
+
     ref.read(dioClientProvider).onSessionExpired = () {
       state = const AsyncData(null);
     };
@@ -60,18 +58,8 @@ class AuthController extends AsyncNotifier<AppUser?> {
     );
   }
 
-  /// Google/Facebook are brokered by Keycloak (`kc_idp_hint`), so the
-  /// resulting token is one the backend accepts. The alias must match the
-  /// identity provider's alias in the `tour-system` realm.
-  Future<String?> loginWithGoogle() {
-    return _signIn((repo) => repo.login(identityProvider: 'google'));
-  }
 
-  Future<String?> loginWithFacebook() {
-    return _signIn((repo) => repo.login(identityProvider: 'facebook'));
-  }
 
-  /// Returns an error message, or `null` on success/cancellation.
   Future<String?> _signIn(
     Future<Result<AppUser?>> Function(AuthRepository repo) action,
   ) async {
@@ -108,8 +96,7 @@ final authControllerProvider = AsyncNotifierProvider<AuthController, AppUser?>(
   AuthController.new,
 );
 
-/// Convenience sync accessor for the current user, `null` while
-/// loading/signed-out.
+
 final currentUserProvider = Provider<AppUser?>((ref) {
   return ref.watch(authControllerProvider).valueOrNull;
 });

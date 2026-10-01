@@ -48,6 +48,7 @@ class UserListController extends AsyncNotifier<List<AppUser>> {
     required String email,
     required String phone,
     required Gender gender,
+    required String role,
     required DateTime dateOfBirth,
   }) async {
     if (ref.read(currentUserProvider) == null) return 'You must be signed in';
@@ -60,6 +61,7 @@ class UserListController extends AsyncNotifier<List<AppUser>> {
       email: email,
       phone: phone,
       gender: gender,
+      role: role,
       dateOfBirth: dateOfBirth,
     );
     return result.when(

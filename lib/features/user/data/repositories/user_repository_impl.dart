@@ -31,6 +31,7 @@ class UserRepositoryImpl implements UserRepository {
     required String lastName,
     required String email,
     required String phone,
+    required String role,
     required Gender gender,
     required DateTime dateOfBirth,
   }) => guardResult(
@@ -42,6 +43,7 @@ class UserRepositoryImpl implements UserRepository {
       email: email,
       phone: phone,
       gender: gender,
+      role: role,
       dateOfBirth: dateOfBirth,
     ),
   );
@@ -54,6 +56,7 @@ class UserRepositoryImpl implements UserRepository {
     String? phone,
     String? profileImage,
     Gender? gender,
+    String? role,
     DateTime? dateOfBirth,
   }) => guardResult(
     () => dataSource.updateProfile(
@@ -63,6 +66,7 @@ class UserRepositoryImpl implements UserRepository {
       phone: phone,
       profileImage: profileImage,
       gender: gender,
+      role: role,
       dateOfBirth: dateOfBirth,
     ),
   );

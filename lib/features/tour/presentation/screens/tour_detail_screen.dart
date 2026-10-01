@@ -56,8 +56,7 @@ class _TourDetailScreenState extends ConsumerState<TourDetailScreen>
   Widget build(BuildContext context) {
     final tourAsync = ref.watch(tourByIdProvider(widget.tourId));
     final user = ref.watch(currentUserProvider);
-    final canManage =
-        user?.role == UserRole.admin || user?.role == UserRole.tourManager;
+    final canManage = user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       body: tourAsync.when(
@@ -574,7 +573,7 @@ class _SchedulesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(schedulesByTourProvider(tourId));
     final user = ref.watch(currentUserProvider);
-    final isCustomer = user?.role == UserRole.customer;
+    final isCustomer = user?.role == UserRole.CUSTOMER;
 
     return Scaffold(
       floatingActionButton: canManage

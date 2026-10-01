@@ -2,11 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'user_role.dart';
 import 'user_status.dart';
 
-/// Mirrors the `users` table. `role` has no column on that table by
-/// design — in the real system roles/groups are owned by Keycloak (hence
-/// `keycloakUserId`) rather than this service's database — but the app
-/// still needs a role to gate navigation and screens, so it's carried
-/// here as the client-side projection of that external assignment.
+
 class AppUser extends Equatable {
   final String id;
   final String keycloakUserId;

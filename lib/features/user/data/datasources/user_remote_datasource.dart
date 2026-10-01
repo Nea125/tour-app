@@ -82,6 +82,7 @@ class UserRemoteDataSource {
     required String email,
     required String phone,
     required Gender gender,
+    required String role,
     required DateTime dateOfBirth,
   }) {
     return api.onRequest(
@@ -97,6 +98,7 @@ class UserRemoteDataSource {
         'phone': phone,
         'gender': gender.name.toUpperCase(),
         'dateOfBirth': ApiJson.localDate(dateOfBirth),
+        'role': role,
       },
       onSuccess: (r) => _user(BaseApiService.dataOf(r)),
     );
@@ -111,6 +113,7 @@ class UserRemoteDataSource {
     String? phone,
     String? profileImage,
     Gender? gender,
+    String? role,
     DateTime? dateOfBirth,
   }) async {
     var user = await api.onRequest(
@@ -121,6 +124,7 @@ class UserRemoteDataSource {
         'lastName': ?lastName,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (gender != null) 'gender': gender.name.toUpperCase(),
+        'role': ?role,
         if (dateOfBirth != null) 'dateOfBirth': ApiJson.localDate(dateOfBirth),
       },
       onSuccess: (r) => BaseApiService.dataOf(r),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/core/constants/log.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/entities/user_role.dart';
 import '../../../../core/utils/formatters.dart';
@@ -16,9 +17,10 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    prettyPrintJson(user);
     if (user == null) return const SizedBox.shrink();
     final canManage =
-        user.role == UserRole.admin || user.role == UserRole.tourManager;
+        user.role == UserRole.ADMIN || user.role == UserRole.MANAGER;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -45,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    user.role.label,
+                    user.role.name.toUpperCase(),
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -105,7 +107,7 @@ class ProfileScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push(AppRoutes.changePassword),
                 ),
-                if (user.role == UserRole.customer) ...[
+                if (user.role == UserRole.CUSTOMER) ...[
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
@@ -127,7 +129,7 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.myReviews),
                   ),
                 ],
-                if (user.role == UserRole.tourGuide) ...[
+                if (user.role == UserRole.GUIDE) ...[
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
@@ -139,7 +141,7 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.myReviews),
                   ),
                 ],
-                // if (canManage) ...[
+                if (canManage) ...[
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
@@ -170,7 +172,7 @@ class ProfileScreen extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminReports),
                   ),
-                // ],
+                ],
               ],
             ),
           ),

@@ -1,23 +1,40 @@
-enum UserRole { admin, tourManager, tourGuide, customer }
+enum UserRole {
+  ADMIN,
+  MANAGER,
+  GUIDE,
+  CUSTOMER,
+}
 
 extension UserRoleX on UserRole {
   String get label {
     switch (this) {
-      case UserRole.admin:
+      case UserRole.ADMIN:
         return 'Admin';
-      case UserRole.tourManager:
-        return 'Tour Manager';
-      case UserRole.tourGuide:
-        return 'Tour Guide';
-      case UserRole.customer:
+      case UserRole.MANAGER:
+        return 'Manager';
+      case UserRole.GUIDE:
+        return 'Guide';
+      case UserRole.CUSTOMER:
         return 'Customer';
     }
   }
 
   static UserRole fromString(String value) {
-    return UserRole.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => UserRole.customer,
-    );
+    switch (value.toUpperCase()) {
+      case 'ADMIN':
+        return UserRole.ADMIN;
+
+      case 'MANAGER':
+        return UserRole.MANAGER;
+
+      case 'GUIDE':
+        return UserRole.GUIDE;
+
+      case 'CUSTOMER':
+        return UserRole.CUSTOMER;
+
+      default:
+        return UserRole.CUSTOMER;
+    }
   }
 }

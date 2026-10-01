@@ -7,8 +7,6 @@ import 'package:flutter/foundation.dart';
 
 import 'dio_exception.dart';
 
-/// Maps Dio/parsing failures to [BaseHttpException]s with user-facing
-/// messages, and provides the request/response logging interceptor.
 class DIOHelper {
   DIOHelper._init();
   static DIOHelper? _instance;
@@ -21,8 +19,7 @@ class DIOHelper {
   static const String UNEXPECTED_ERROR = 'Oops, Something went wrong';
   static const String SERVER_ERROR = 'Server error';
 
-  /// Logic or parsing error (e.g. the response JSON didn't have the
-  /// expected shape).
+
   ServerErrorHttpException onTypeError(
     Object exception,
     StackTrace stackTrace,
@@ -80,10 +77,6 @@ class DIOHelper {
     return ServerResponseHttpException(exception.toString());
   }
 
-  /// Most useful message from an error body. Understands the backend's
-  /// `ApiErrorResponse` (`errorDetails` is a reason string or a list of
-  /// field errors; its `message` is generic like "Business logic error")
-  /// and Keycloak's OAuth errors (`error_description`).
   String serverMessage(dynamic data) {
     if (data is! Map) return UNEXPECTED_ERROR;
     final details = data['errorDetails'];
@@ -101,7 +94,7 @@ class DIOHelper {
     return UNEXPECTED_ERROR;
   }
 
-  /// User-facing message for any error thrown out of the network layer.
+
   String handleExceptionError(Object error, [String path = '']) {
     debugPrint('Exception caught [${error.runtimeType}][$path]: $error');
     if (error is BaseHttpException) return error.message;

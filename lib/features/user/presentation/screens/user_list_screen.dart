@@ -17,13 +17,13 @@ import '../../../../core/constants/app_text_styles.dart';
 
 Color roleColor(UserRole role) {
   switch (role) {
-    case UserRole.admin:
+    case UserRole.ADMIN:
       return AppColors.error;
-    case UserRole.tourManager:
+    case UserRole.MANAGER:
       return AppColors.secondary;
-    case UserRole.tourGuide:
+    case UserRole.GUIDE:
       return AppColors.info;
-    case UserRole.customer:
+    case UserRole.CUSTOMER:
       return AppColors.success;
   }
 }

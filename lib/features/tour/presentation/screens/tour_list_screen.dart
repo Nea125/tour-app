@@ -27,7 +27,7 @@ class TourListScreen extends ConsumerWidget {
     final destinationsAsync = ref.watch(destinationListControllerProvider);
     final user = ref.watch(currentUserProvider);
     final canManage =
-        user?.role == UserRole.admin || user?.role == UserRole.tourManager;
+        user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       appBar: AppBar(

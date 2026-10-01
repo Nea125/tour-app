@@ -125,7 +125,7 @@ class _GuideFormScreenState extends ConsumerState<GuideFormScreen> {
               usersAsync.when(
                 data: (users) {
                   final guideUsers = users
-                      .where((u) => u.role == UserRole.tourGuide)
+                      .where((u) => u.role == UserRole.GUIDE)
                       .toList();
                   return DropdownButtonFormField<String>(
                     initialValue: guideUsers.any((u) => u.id == _userId)

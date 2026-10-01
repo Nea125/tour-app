@@ -31,7 +31,7 @@ class BookingDetailScreen extends ConsumerWidget {
     final bookingAsync = ref.watch(bookingByIdProvider(bookingId));
     final user = ref.watch(currentUserProvider);
     final canManage =
-        user?.role == UserRole.admin || user?.role == UserRole.tourManager;
+        user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Booking Details')),

@@ -35,7 +35,7 @@ class HomeDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Hi, ${user.firstName} 👋'),
         actions: [
-          if (user.role == UserRole.customer)
+          if (user.role == UserRole.CUSTOMER)
             TextButton.icon(
               onPressed: () => context.push(AppRoutes.contactUs),
               icon: const Icon(Icons.contact_phone_outlined, size: 18),
@@ -46,9 +46,9 @@ class HomeDashboardScreen extends ConsumerWidget {
         ],
       ),
       body: switch (user.role) {
-        UserRole.admin || UserRole.tourManager => const _ManagementHome(),
-        UserRole.tourGuide => _GuideHome(userId: user.id),
-        UserRole.customer => const _CustomerHome(),
+        UserRole.ADMIN || UserRole.MANAGER => const _ManagementHome(),
+        UserRole.GUIDE => _GuideHome(userId: user.id),
+        UserRole.CUSTOMER => const _CustomerHome(),
       },
     );
   }

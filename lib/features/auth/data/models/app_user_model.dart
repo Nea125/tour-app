@@ -73,12 +73,12 @@ class AppUserModel extends AppUser {
   /// backend's `UserRole` enum plus the `STAFF` authority in SecurityConfig.
   static UserRole roleFromKeycloak(List<String> realmRoles) {
     final roles = realmRoles.map((r) => r.toUpperCase()).toSet();
-    if (roles.contains('ADMIN')) return UserRole.admin;
-    if (roles.contains('MANAGER') || roles.contains('STAFF')) {
-      return UserRole.tourManager;
+    if (roles.contains('ADMIN')) return UserRole.ADMIN;
+    if (roles.contains('MANAGER') || roles.contains('CUSTOMER')) {
+      return UserRole.MANAGER;
     }
-    if (roles.contains('TOUR_GUIDE')) return UserRole.tourGuide;
-    return UserRole.customer;
+    if (roles.contains('GUIDE')) return UserRole.GUIDE;
+    return UserRole.CUSTOMER;
   }
 
   factory AppUserModel.fromEntity(AppUser user) {

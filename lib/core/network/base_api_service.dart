@@ -11,9 +11,7 @@ final baseApiServiceProvider = Provider<BaseApiService>((ref) {
   return BaseApiService(ref.watch(dioClientProvider).dio);
 });
 
-/// Single entry point for API calls. The access token (and its refresh) is
-/// handled by [DioClient]'s interceptor; this only shapes the request and
-/// turns every failure into a [BaseHttpException].
+
 class BaseApiService {
   final Dio dio;
 
@@ -63,20 +61,18 @@ class BaseApiService {
     }
   }
 
-  /// `data` of the backend's `ApiResponse` envelope, as a JSON object.
+
   static Map<String, dynamic> dataOf(Response response) =>
       (response.data['data'] as Map).cast<String, dynamic>();
 
-  /// `data` of the backend's `ApiResponse` envelope, as a JSON list.
+
   static List<Map<String, dynamic>> listOf(Response response) =>
       _maps(response.data['data']);
 
   static List<Map<String, dynamic>> _maps(dynamic list) =>
       (list as List).map((e) => (e as Map).cast<String, dynamic>()).toList();
 
-  /// Fetches every page of a paged `GET` endpoint. Understands both shapes
-  /// the backend returns: `data: {items, totalPages}` and a bare
-  /// `data: [...]` with a sibling `pagination: {totalPages}`.
+
   Future<List<T>> getAllPages<T>({
     required String path,
     required T Function(Map<String, dynamic> json) fromJson,

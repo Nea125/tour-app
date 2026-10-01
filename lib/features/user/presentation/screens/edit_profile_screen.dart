@@ -97,6 +97,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       lastName: _lastNameController.text.trim(),
       phone: _phoneController.text.trim(),
       profileImage: _pickedImage?.path,
+      role: user.role.name,
     );
     if (!mounted) return;
     setState(() => _submitting = false);

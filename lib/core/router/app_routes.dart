@@ -1,9 +1,4 @@
-/// Single source of truth for every route path in the app.
-///
-/// Static routes are plain `String` constants. Parameterized routes ship
-/// two things: a `*Template` constant (the `:param` pattern registered
-/// with [GoRoute]) and a matching builder function that fills in real
-/// values for navigation calls — so the two can never drift apart.
+
 class AppRoutes {
   AppRoutes._();
 
@@ -30,6 +25,7 @@ class AppRoutes {
   // ---------------- Schedule ----------------
   static const scheduleFormTemplate = '/schedule-form/:tourId';
   static String scheduleForm(String tourId) => '/schedule-form/$tourId';
+  static const String mySchedules = '/my-schedules';
 
   // ---------------- Guide ----------------
   static const guideForm = '/guide-form';
@@ -46,6 +42,13 @@ class AppRoutes {
   static const createBookingTemplate = '/create-booking/:scheduleId';
   static String createBooking(String scheduleId) =>
       '/create-booking/$scheduleId';
+
+  // ---------------- Payment ----------------
+  static const paymentTemplate = '/payment/:bookingId';
+  static String payment(String bookingId) => '/payment/$bookingId';
+  static const paymentFailedTemplate = '/payment-failed/:bookingId';
+  static String paymentFailed(String bookingId, {bool cancelled = false}) =>
+      '/payment-failed/$bookingId${cancelled ? '?cancelled=true' : ''}';
 
   // ---------------- Review ----------------
   static const addReviewTemplate = '/add-review/:tourId/:bookingId';

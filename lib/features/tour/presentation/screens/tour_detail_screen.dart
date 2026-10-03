@@ -695,7 +695,8 @@ class _SchedulesTab extends ConsumerWidget {
                         error: (_, _) => const SizedBox.shrink(),
                       ),
                       if (isCustomer &&
-                          schedule.status == ScheduleStatus.open) ...[
+                          schedule.status == ScheduleStatus.open &&
+                          schedule.startDate.isAfter(DateTime.now())) ...[
                         const SizedBox(height: AppSpacing.s10),
                         SizedBox(
                           width: double.infinity,

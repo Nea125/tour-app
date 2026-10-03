@@ -169,10 +169,26 @@ class UserListScreen extends ConsumerWidget {
                                       ),
                                     );
                                   } else if (value.startsWith('role_')) {
+                                    final role = UserRoleX.fromString(
+                                      value.substring(5),
+                                    );
+                                    if (role == user.role) return;
                                     error = await controller.changeRole(
                                       user.id,
-                                      UserRoleX.fromString(value.substring(5)),
+                                      role,
                                     );
+                                    if (error == null && context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${user.fullName} is now ${role.label}',
+                                          ),
+                                          backgroundColor: AppColors.success,
+                                        ),
+                                      );
+                                    }
                                   } else if (value == 'delete') {
                                     error = await controller.deleteUser(
                                       user.id,
@@ -196,8 +212,9 @@ class UserListScreen extends ConsumerWidget {
                                   ),
                                   const PopupMenuDivider(),
                                   ...UserRole.values.map(
-                                    (r) => PopupMenuItem(
+                                    (r) => CheckedPopupMenuItem(
                                       value: 'role_${r.name}',
+                                      checked: r == user.role,
                                       child: Text('Set as ${r.label}'),
                                     ),
                                   ),

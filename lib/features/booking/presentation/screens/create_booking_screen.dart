@@ -48,7 +48,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
       return;
     }
     setState(() => _submitting = true);
-    final error = await ref
+    final result = await ref
         .read(myBookingsControllerProvider.notifier)
         .createBooking(
           tourScheduleId: widget.scheduleId,
@@ -57,19 +57,14 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
         );
     if (!mounted) return;
     setState(() => _submitting = false);
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: AppColors.error),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Booking request submitted!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      context.go(AppRoutes.bookings);
-    }
+    result.when(
+      // The booking is PENDING until paid; payment confirms it.
+      success: (booking) =>
+          context.pushReplacement(AppRoutes.payment(booking.id)),
+      failure: (f) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(f.message), backgroundColor: AppColors.error),
+      ),
+    );
   }
 
   @override
@@ -198,7 +193,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Confirm Booking'),
+                          : const Text('Continue to Payment'),
                     ),
                   ],
                 ),

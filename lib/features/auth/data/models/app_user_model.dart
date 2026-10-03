@@ -37,13 +37,14 @@ class AppUserModel extends AppUser {
     );
   }
 
-  /// Builds the session user from the backend's `UserProfileResponse`.
-  /// The role comes from the Keycloak access token, since the backend
-  /// stores no role column — Keycloak realm roles are the source of truth.
+  /// Builds a user from the backend's `UserProfileResponse`, which carries
+  /// the Keycloak realm role as `role`. [realmRoles] (from the access token)
+  /// is only a fallback for responses without one.
   factory AppUserModel.fromProfileResponse(
     Map<String, dynamic> json, {
-    required List<String> realmRoles,
+    List<String> realmRoles = const [],
   }) {
+    final apiRole = json['role'] as String?;
     final now = DateTime.now();
     final dateOfBirth = json['dateOfBirth'] as String?;
     return AppUserModel(
@@ -63,7 +64,9 @@ class AppUserModel extends AppUser {
       status: UserStatusX.fromString(
         (json['status'] as String? ?? 'active').toLowerCase(),
       ),
-      role: roleFromKeycloak(realmRoles),
+      role: apiRole != null && apiRole.isNotEmpty
+          ? UserRoleX.fromString(apiRole)
+          : roleFromKeycloak(realmRoles),
       createdAt: now,
       updatedAt: now,
     );
@@ -74,10 +77,11 @@ class AppUserModel extends AppUser {
   static UserRole roleFromKeycloak(List<String> realmRoles) {
     final roles = realmRoles.map((r) => r.toUpperCase()).toSet();
     if (roles.contains('ADMIN')) return UserRole.ADMIN;
-    if (roles.contains('MANAGER') || roles.contains('CUSTOMER')) {
+    if (roles.contains('MANAGER')) {
       return UserRole.MANAGER;
     }
     if (roles.contains('GUIDE')) return UserRole.GUIDE;
+    if (roles.contains('CUSTOMER')) return UserRole.CUSTOMER;
     return UserRole.CUSTOMER;
   }
 

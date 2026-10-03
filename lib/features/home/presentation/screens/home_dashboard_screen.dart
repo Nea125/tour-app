@@ -32,19 +32,7 @@ class HomeDashboardScreen extends ConsumerWidget {
     if (user == null) return const SizedBox.shrink();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Hi, ${user.firstName} 👋'),
-        actions: [
-          if (user.role == UserRole.CUSTOMER)
-            TextButton.icon(
-              onPressed: () => context.push(AppRoutes.contactUs),
-              icon: const Icon(Icons.contact_phone_outlined, size: 18),
-              label: const Text('Contact Us'),
-              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-            ),
-          const SizedBox(width: AppSpacing.s4),
-        ],
-      ),
+      appBar: AppBar(title: Text('Hi, ${user.firstName} 👋')),
       body: switch (user.role) {
         UserRole.ADMIN || UserRole.MANAGER => const _ManagementHome(),
         UserRole.GUIDE => _GuideHome(userId: user.id),

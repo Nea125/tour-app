@@ -12,4 +12,7 @@ abstract class BookingRepository {
     String specialRequest,
   });
   Future<Result<Booking>> updateBookingStatus(String id, BookingStatus status);
+
+  /// Pays a pending booking; a successful payment confirms it.
+  Future<Result<Booking>> payBooking(String id);
 }

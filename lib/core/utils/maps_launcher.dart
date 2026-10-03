@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
-
 /// Opens the Google Maps app (or the web fallback) at the given coordinates.
 /// Shows an error snackbar if nothing on the device can handle the link.
 Future<void> openInGoogleMaps(

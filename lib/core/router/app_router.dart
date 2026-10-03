@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/features/schedule/presentation/screens/assigned_schedule.dart';
 
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/change_password_screen.dart';
@@ -13,6 +14,8 @@ import '../../features/booking/presentation/screens/admin_bookings_screen.dart';
 import '../../features/booking/presentation/screens/booking_detail_screen.dart';
 import '../../features/booking/presentation/screens/create_booking_screen.dart';
 import '../../features/booking/presentation/screens/my_bookings_screen.dart';
+import '../../features/booking/presentation/screens/payment_failed_screen.dart';
+import '../../features/booking/presentation/screens/payment_screen.dart';
 import '../../features/destination/domain/entities/destination.dart';
 import '../../features/destination/presentation/screens/destination_detail_screen.dart';
 import '../../features/destination/presentation/screens/destination_form_screen.dart';
@@ -161,6 +164,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: AppRoutes.paymentTemplate,
+        builder: (context, state) =>
+            PaymentScreen(bookingId: state.pathParameters['bookingId']!),
+      ),
+      GoRoute(
+        path: AppRoutes.paymentFailedTemplate,
+        builder: (context, state) => PaymentFailedScreen(
+          bookingId: state.pathParameters['bookingId']!,
+          cancelled: state.uri.queryParameters['cancelled'] == 'true',
+          message: state.extra as String?,
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.addReviewTemplate,
         builder: (context, state) => AddReviewScreen(
           tourId: state.pathParameters['tourId']!,
@@ -198,6 +214,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminBookings,
         builder: (context, state) => const AdminBookingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.mySchedules,
+        builder: (context, state) => const MyAssignedSchedulesScreen(),
       ),
     ],
   );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/core/widgets/multi_image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/image_picker_field.dart';
 import '../../domain/entities/destination.dart';
 import '../../domain/entities/destination_status.dart';
 import '../providers/destination_provider.dart';
@@ -25,7 +25,7 @@ class _DestinationFormScreenState extends ConsumerState<DestinationFormScreen> {
   late final TextEditingController _provinceController;
   late final TextEditingController _countryController;
   late final TextEditingController _descriptionController;
-  late String _imagePath;
+  late List<String> _images;
   late final TextEditingController _latController;
   late final TextEditingController _lngController;
   // The API has no destination status; kept as-is so edits don't flip it.
@@ -42,7 +42,11 @@ class _DestinationFormScreenState extends ConsumerState<DestinationFormScreen> {
     _provinceController = TextEditingController(text: d?.province ?? '');
     _countryController = TextEditingController(text: d?.country ?? '');
     _descriptionController = TextEditingController(text: d?.description ?? '');
-    _imagePath = d?.imageUrl ?? '';
+    _images = d == null
+        ? []
+        : d.images.isNotEmpty
+        ? d.images
+        : [if (d.imageUrl.isNotEmpty) d.imageUrl];
     _latController = TextEditingController(text: d?.latitude.toString() ?? '');
     _lngController = TextEditingController(text: d?.longitude.toString() ?? '');
     _status = d?.status ?? DestinationStatus.active;
@@ -71,7 +75,8 @@ class _DestinationFormScreenState extends ConsumerState<DestinationFormScreen> {
       country: _countryController.text.trim(),
       latitude: double.parse(_latController.text.trim()),
       longitude: double.parse(_lngController.text.trim()),
-      imageUrl: _imagePath,
+      imageUrl: _images.isEmpty ? '' : _images.first,
+      images: _images,
       status: _status,
       createdAt: widget.destination?.createdAt ?? now,
       updatedAt: now,
@@ -158,10 +163,12 @@ class _DestinationFormScreenState extends ConsumerState<DestinationFormScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.s16),
-            ImagePickerField(
-              label: 'Cover Image',
-              initialValue: _imagePath,
-              onChanged: (path) => _imagePath = path,
+            MultiImagePickerField(
+              label: 'Images',
+              initialValue: _images,
+              // The API only accepts new images when creating.
+              canAddRemove: !_isEditing,
+              onChanged: (images) => _images = images,
             ),
             const SizedBox(height: AppSpacing.s16),
             CustomTextField(

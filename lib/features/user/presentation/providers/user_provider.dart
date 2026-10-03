@@ -89,7 +89,11 @@ class UserListController extends AsyncNotifier<List<AppUser>> {
     final repo = ref.read(userRepositoryProvider);
     final result = await repo.setUserRole(id, role);
     return result.when(
-      success: (_) {
+      success: (updated) {
+        if (ref.read(currentUserProvider)?.id == updated.id) {
+          ref.read(authControllerProvider.notifier).updateUser(updated);
+        }
+        ref.invalidate(userByIdProvider(id));
         refresh();
         return null;
       },

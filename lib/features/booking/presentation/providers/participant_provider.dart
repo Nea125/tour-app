@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/network/base_api_service.dart';
 import '../../data/datasources/participant_remote_datasource.dart';
 import '../../data/repositories/participant_repository_impl.dart';
@@ -53,6 +54,24 @@ class ParticipantController extends Notifier<void> {
         return null;
       },
       failure: (f) => f.message,
+    );
+  }
+
+  /// Registers the signed-in purchaser as a traveler on [bookingId], using
+  /// their profile details, so a solo booking needs no participant form.
+  Future<String?> addPurchaser(String bookingId) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return 'You must be signed in';
+    return addParticipant(
+      BookingParticipant(
+        id: '',
+        bookingId: bookingId,
+        fullName: user.fullName.trim(),
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth,
+        phone: user.phone,
+        email: user.email,
+      ),
     );
   }
 

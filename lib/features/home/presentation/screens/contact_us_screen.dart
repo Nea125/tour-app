@@ -46,7 +46,7 @@ class ContactUsScreen extends StatelessWidget {
                 _ContactTile(
                   icon: Icons.send_outlined,
                   title: 'Telegram',
-                  subtitle: '@travelappcambodia',
+                  subtitle: '@neaRTK',
                   onTap: () => launchWebsite(context, CompanyInfo.telegramUrl),
                 ),
                 const Divider(height: AppSpacing.s1),

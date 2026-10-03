@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/network/base_api_service.dart';
+import '../../../../core/utils/result.dart';
+import '../../../schedule/presentation/providers/schedule_provider.dart';
 import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/booking.dart';
@@ -33,13 +36,16 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
     await future;
   }
 
-  Future<String?> createBooking({
+  /// Creates a PENDING booking; it's confirmed once [payBooking] succeeds.
+  Future<Result<Booking>> createBooking({
     required String tourScheduleId,
     required int numberOfPeople,
     String specialRequest = '',
   }) async {
     final user = ref.read(currentUserProvider);
-    if (user == null) return 'You must be signed in to book';
+    if (user == null) {
+      return const Error(ValidationFailure('You must be signed in to book'));
+    }
     final repo = ref.read(bookingRepositoryProvider);
     final result = await repo.createBooking(
       userId: user.id,
@@ -47,10 +53,22 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
       numberOfPeople: numberOfPeople,
       specialRequest: specialRequest,
     );
+    if (result.isSuccess) {
+      refresh();
+      ref.invalidate(allBookingsControllerProvider);
+      ref.invalidate(availableSlotsProvider(tourScheduleId));
+    }
+    return result;
+  }
+
+  Future<String?> payBooking(String id) async {
+    final repo = ref.read(bookingRepositoryProvider);
+    final result = await repo.payBooking(id);
     return result.when(
       success: (_) {
         refresh();
         ref.invalidate(allBookingsControllerProvider);
+        ref.invalidate(bookingByIdProvider(id));
         return null;
       },
       failure: (f) => f.message,
@@ -88,19 +106,6 @@ class AllBookingsController extends AsyncNotifier<List<Booking>> {
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
-  }
-
-  Future<String?> updateStatus(String id, BookingStatus status) async {
-    final repo = ref.read(bookingRepositoryProvider);
-    final result = await repo.updateBookingStatus(id, status);
-    return result.when(
-      success: (_) {
-        refresh();
-        ref.invalidate(myBookingsControllerProvider);
-        return null;
-      },
-      failure: (f) => f.message,
-    );
   }
 }
 

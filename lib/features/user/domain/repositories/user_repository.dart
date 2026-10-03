@@ -10,8 +10,8 @@ abstract class UserRepository {
     UserStatus? status,
   });
   Future<Result<AppUser>> getUserById(String id);
-  /// Creates the Keycloak account (with [password]) and its profile row.
-  /// Roles are assigned in Keycloak, not here.
+  /// Creates the Keycloak account (with [password]), its profile row and
+  /// its realm [role].
   Future<Result<AppUser>> createUser({
     required String userName,
     required String password,
@@ -30,10 +30,9 @@ abstract class UserRepository {
     String? phone,
     String? profileImage,
     Gender? gender,
-    String? role,
     DateTime? dateOfBirth,
   });
   Future<Result<void>> setUserStatus(String id, UserStatus status);
-  Future<Result<void>> setUserRole(String id, UserRole role);
+  Future<Result<AppUser>> setUserRole(String id, UserRole role);
   Future<Result<void>> deleteUser(String id);
 }

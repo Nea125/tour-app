@@ -1,16 +1,14 @@
 import 'package:equatable/equatable.dart';
 
-enum BookingStatus { pending, confirmed, completed, cancelled }
+enum BookingStatus { pending, paid, cancelled }
 
 extension BookingStatusX on BookingStatus {
   String get label {
     switch (this) {
       case BookingStatus.pending:
         return 'Pending';
-      case BookingStatus.confirmed:
-        return 'Confirmed';
-      case BookingStatus.completed:
-        return 'Completed';
+      case BookingStatus.paid:
+        return 'Paid';
       case BookingStatus.cancelled:
         return 'Cancelled';
     }
@@ -48,6 +46,19 @@ class Booking extends Equatable {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  /// A pending booking can still be paid until its schedule's start day.
+  bool canPayBefore(DateTime scheduleStart, {DateTime? now}) {
+    if (status != BookingStatus.pending) return false;
+    final n = now ?? DateTime.now();
+    final today = DateTime(n.year, n.month, n.day);
+    final startDay = DateTime(
+      scheduleStart.year,
+      scheduleStart.month,
+      scheduleStart.day,
+    );
+    return today.isBefore(startDay);
+  }
 
   Booking copyWith({
     String? id,

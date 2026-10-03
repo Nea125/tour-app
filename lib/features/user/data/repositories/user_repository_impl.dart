@@ -56,7 +56,6 @@ class UserRepositoryImpl implements UserRepository {
     String? phone,
     String? profileImage,
     Gender? gender,
-    String? role,
     DateTime? dateOfBirth,
   }) => guardResult(
     () => dataSource.updateProfile(
@@ -66,12 +65,11 @@ class UserRepositoryImpl implements UserRepository {
       phone: phone,
       profileImage: profileImage,
       gender: gender,
-      role: role,
       dateOfBirth: dateOfBirth,
     ),
   );
 
-  // Status and roles are managed in Keycloak; the API exposes neither.
+  // The API has no endpoint for changing a user's status.
   @override
   Future<Result<void>> setUserStatus(String id, UserStatus status) async =>
       const Error(
@@ -79,10 +77,8 @@ class UserRepositoryImpl implements UserRepository {
       );
 
   @override
-  Future<Result<void>> setUserRole(String id, UserRole role) async =>
-      const Error(
-        ValidationFailure('Roles are managed in Keycloak, not in the app'),
-      );
+  Future<Result<AppUser>> setUserRole(String id, UserRole role) =>
+      guardResult(() => dataSource.updateUserRole(id, role));
 
   @override
   Future<Result<void>> deleteUser(String id) =>

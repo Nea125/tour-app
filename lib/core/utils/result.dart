@@ -2,8 +2,7 @@ import '../error/failures.dart';
 import '../network/dio_exception.dart';
 import '../network/dio_helper.dart';
 
-/// A lightweight Either-style result wrapper used across the domain/data
-/// layers so repositories never throw across architectural boundaries.
+
 sealed class Result<T> {
   const Result();
 
@@ -35,10 +34,6 @@ class Error<T> extends Result<T> {
   const Error(this.failure);
 }
 
-/// Runs a data-source call and wraps its outcome, mapping any error to a
-/// [Failure] with a user-facing message: HTTP 404 → [NotFoundFailure],
-/// other 4xx (and client-side rule checks) → [ValidationFailure], anything
-/// else → [ServerFailure].
 Future<Result<T>> guardResult<T>(Future<T> Function() body) async {
   try {
     return Success(await body());

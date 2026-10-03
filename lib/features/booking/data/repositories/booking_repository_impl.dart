@@ -45,15 +45,18 @@ class BookingRepositoryImpl implements BookingRepository {
     switch (status) {
       case BookingStatus.cancelled:
         return guardResult(() => dataSource.cancelBooking(id));
-      case BookingStatus.confirmed:
-        return guardResult(() => dataSource.payBooking(id));
+      case BookingStatus.paid:
+        return const Error(
+          ValidationFailure('Bookings are confirmed automatically by payment'),
+        );
       case BookingStatus.pending:
-      case BookingStatus.completed:
-        return Error(
-          ValidationFailure(
-            'Marking a booking as ${status.label.toLowerCase()} is not supported yet',
-          ),
+        return const Error(
+          ValidationFailure('Bookings cannot be reverted to pending'),
         );
     }
   }
+
+  @override
+  Future<Result<Booking>> payBooking(String id) =>
+      guardResult(() => dataSource.payBooking(id));
 }

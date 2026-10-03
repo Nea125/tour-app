@@ -20,9 +20,7 @@ Color bookingStatusColor(BookingStatus status) {
   switch (status) {
     case BookingStatus.pending:
       return AppColors.warning;
-    case BookingStatus.confirmed:
-      return AppColors.info;
-    case BookingStatus.completed:
+    case BookingStatus.paid:
       return AppColors.success;
     case BookingStatus.cancelled:
       return AppColors.error;
@@ -128,6 +126,38 @@ class MyBookingsScreen extends ConsumerWidget {
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
+                                      if (booking.canPayBefore(
+                                        schedule.startDate,
+                                      )) ...[
+                                        const SizedBox(height: AppSpacing.s8),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              minimumSize: const Size(
+                                                0,
+                                                AppSpacing.s32,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: AppSpacing.s12,
+                                                  ),
+                                              textStyle: const TextStyle(
+                                                fontSize: AppFontSizes.f12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            icon: const Icon(
+                                              Icons.payment_rounded,
+                                              size: 16,
+                                            ),
+                                            label: const Text('Pay Now'),
+                                            onPressed: () => context.push(
+                                              AppRoutes.payment(booking.id),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),

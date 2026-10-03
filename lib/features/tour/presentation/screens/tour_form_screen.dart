@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/core/widgets/multi_image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../../../core/widgets/image_picker_field.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../destination/presentation/providers/destination_provider.dart';
 import '../../domain/entities/tour.dart';
@@ -29,7 +29,7 @@ class _TourFormScreenState extends ConsumerState<TourFormScreen> {
   late final TextEditingController _durationDaysController;
   late final TextEditingController _durationNightsController;
   late final TextEditingController _maxParticipantsController;
-  late String _coverImage;
+  late List<String> _images;
   String? _destinationId;
   // The API has no tour status; kept as-is so edits don't flip it.
   TourStatus _status = TourStatus.active;
@@ -55,7 +55,7 @@ class _TourFormScreenState extends ConsumerState<TourFormScreen> {
     _maxParticipantsController = TextEditingController(
       text: t?.maxParticipants.toString() ?? '',
     );
-    _coverImage = t?.images.isNotEmpty == true ? t!.images.first : '';
+    _images = [...?t?.images];
     _destinationId = t?.destinationId;
     _status = t?.status ?? TourStatus.active;
   }
@@ -94,8 +94,8 @@ class _TourFormScreenState extends ConsumerState<TourFormScreen> {
       maxParticipants: int.parse(_maxParticipantsController.text.trim()),
       price: double.parse(_priceController.text.trim()),
       status: _status,
-      // A newly picked cover replaces the first image; the rest are kept.
-      images: [_coverImage, ...?widget.tour?.images.skip(1)],
+      // On edit, a local path replaces the server image at the same index.
+      images: _images,
       createdAt: widget.tour?.createdAt ?? now,
       updatedAt: now,
     );
@@ -199,11 +199,13 @@ class _TourFormScreenState extends ConsumerState<TourFormScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.s16),
-            ImagePickerField(
-              label: 'Cover Image',
-              initialValue: _coverImage,
-              required: true,
-              onChanged: (path) => _coverImage = path,
+            MultiImagePickerField(
+              label: 'Images',
+              initialValue: _images,
+              required: !_isEditing,
+              // The API only accepts new images when creating.
+              canAddRemove: !_isEditing,
+              onChanged: (images) => _images = images,
             ),
             const SizedBox(height: AppSpacing.s16),
             CustomTextField(

@@ -118,6 +118,11 @@ class ProfileScreen extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.bookings),
                   ),
+                ],
+                if (user.role == UserRole.CUSTOMER) ...[
+                  const Divider(height: AppSpacing.s1),
+
+                  const Divider(height: AppSpacing.s1),
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
@@ -127,32 +132,47 @@ class ProfileScreen extends ConsumerWidget {
                     title: const Text('My Reviews'),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.myReviews),
+                  ),
+                ],
+                // Only customer Role
+                if (user.role == UserRole.CUSTOMER) ...[
+                  const Divider(height: AppSpacing.s1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.contact_phone_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text('Contact Us'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.contactUs),
                   ),
                 ],
                 if (user.role == UserRole.GUIDE) ...[
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
-                      Icons.rate_review_outlined,
+                      Icons.schedule_outlined,
                       color: AppColors.primary,
                     ),
-                    title: const Text('My Reviews'),
+                    title: const Text('My Schedules'),
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => context.push(AppRoutes.myReviews),
+                    onTap: () => context.push(AppRoutes.mySchedules),
                   ),
                 ],
-                if (canManage) ...[
+                // Only Admin and Manager Roles
+                if (user.role == UserRole.ADMIN) ...[
                   const Divider(height: AppSpacing.s1),
                   ListTile(
                     leading: const Icon(
-                      Icons.people_outline_rounded,
+                      Icons.people_outline,
                       color: AppColors.primary,
                     ),
-                    title: const Text('Manage Users'),
+                    title: const Text('User Management'),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminUsers),
                   ),
-                  const Divider(height: AppSpacing.s1),
+                ],
+                if (canManage) ...[
                   ListTile(
                     leading: const Icon(
                       Icons.receipt_long_outlined,

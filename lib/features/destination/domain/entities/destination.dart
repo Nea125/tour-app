@@ -9,7 +9,11 @@ class Destination extends Equatable {
   final String country;
   final double latitude;
   final double longitude;
+  /// Cover image: the first of [images].
   final String imageUrl;
+
+  /// All image URLs, or local paths for photos picked but not yet uploaded.
+  final List<String> images;
   final DestinationStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -23,6 +27,7 @@ class Destination extends Equatable {
     required this.latitude,
     required this.longitude,
     required this.imageUrl,
+    this.images = const [],
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -37,6 +42,7 @@ class Destination extends Equatable {
     double? latitude,
     double? longitude,
     String? imageUrl,
+    List<String>? images,
     DestinationStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -50,6 +56,7 @@ class Destination extends Equatable {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       imageUrl: imageUrl ?? this.imageUrl,
+      images: images ?? this.images,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -66,6 +73,7 @@ class Destination extends Equatable {
     latitude,
     longitude,
     imageUrl,
+    images,
     status,
     createdAt,
     updatedAt,

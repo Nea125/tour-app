@@ -70,7 +70,8 @@ class BookingRemoteDataSource {
     );
   }
 
-  /// Paying a PENDING booking is what confirms it on the backend.
+  /// Paying a PENDING booking confirms it on the backend right away; no
+  /// admin approval is involved.
   Future<BookingModel> payBooking(String id) async {
     await api.onRequest(
       path: _PAYMENTS,

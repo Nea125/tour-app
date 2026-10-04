@@ -6,6 +6,7 @@ import '../../../../core/utils/result.dart';
 import '../../../schedule/presentation/providers/schedule_provider.dart';
 import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
+import '../../domain/entities/payment_eligibility.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
 
@@ -40,7 +41,7 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
   Future<Result<Booking>> createBooking({
     required String tourScheduleId,
     required int numberOfPeople,
-    String specialRequest = '',
+    // String specialRequest = '',
   }) async {
     final user = ref.read(currentUserProvider);
     if (user == null) {
@@ -51,7 +52,7 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
       userId: user.id,
       tourScheduleId: tourScheduleId,
       numberOfPeople: numberOfPeople,
-      specialRequest: specialRequest,
+      // specialRequest: specialRequest,
     );
     if (result.isSuccess) {
       refresh();
@@ -69,6 +70,7 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
         refresh();
         ref.invalidate(allBookingsControllerProvider);
         ref.invalidate(bookingByIdProvider(id));
+        ref.invalidate(canPayBookingProvider(id));
         return null;
       },
       failure: (f) => f.message,
@@ -82,6 +84,8 @@ class MyBookingsController extends AsyncNotifier<List<Booking>> {
       success: (_) {
         refresh();
         ref.invalidate(allBookingsControllerProvider);
+        ref.invalidate(bookingByIdProvider(id));
+        ref.invalidate(canPayBookingProvider(id));
         return null;
       },
       failure: (f) => f.message,
@@ -122,3 +126,12 @@ final bookingByIdProvider = FutureProvider.family<Booking, String>((
   final result = await repo.getBookingById(id);
   return result.when(success: (b) => b, failure: (f) => throw f);
 });
+
+/// Backend check of whether a booking can be paid right now. Auto-disposed
+/// so it is re-checked every time a screen asks again.
+final canPayBookingProvider = FutureProvider.autoDispose
+    .family<PaymentEligibility, String>((ref, id) async {
+      final repo = ref.watch(bookingRepositoryProvider);
+      final result = await repo.canPayBooking(id);
+      return result.when(success: (r) => r, failure: (f) => throw f);
+    });

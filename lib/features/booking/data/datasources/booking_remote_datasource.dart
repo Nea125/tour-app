@@ -2,6 +2,7 @@
 
 import '../../../../core/network/base_api_service.dart';
 import '../../../../core/network/http_method.dart';
+import '../../domain/entities/payment_eligibility.dart';
 import '../../domain/entities/booking.dart';
 import '../models/booking_model.dart';
 
@@ -67,6 +68,21 @@ class BookingRemoteDataSource {
       path: '$_BOOKINGS/$id$_CANCEL',
       method: HTTPMethod.PATCH,
       onSuccess: (r) => BookingModel.fromApi(BaseApiService.dataOf(r)),
+    );
+  }
+
+  /// `GET /payments/booking/{id}/can-pay`.
+  Future<PaymentEligibility> canPayBooking(String id) {
+    return api.onRequest(
+      path: '$_PAYMENTS/booking/$id/can-pay',
+      method: HTTPMethod.GET,
+      onSuccess: (r) {
+        final data = BaseApiService.dataOf(r);
+        return PaymentEligibility(
+          canPay: data['canPay'] == true,
+          message: (data['message'] ?? '').toString(),
+        );
+      },
     );
   }
 

@@ -142,19 +142,19 @@ class MyAssignedSchedulesScreen extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.people_outline,
-                                    size: 15,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    'Capacity: ${schedule.capacity}',
-                                  ),
-                                ],
-                              ),
+                              // Row(
+                              //   children: [
+                              //     const Icon(
+                              //       Icons.people_outline,
+                              //       size: 15,
+                              //       color: AppColors.textSecondary,
+                              //     ),
+                              //     const SizedBox(width: 5),
+                              //     Text(
+                              //       'Capacity: ${schedule.capacity}',
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),

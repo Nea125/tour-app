@@ -56,7 +56,8 @@ class _TourDetailScreenState extends ConsumerState<TourDetailScreen>
   Widget build(BuildContext context) {
     final tourAsync = ref.watch(tourByIdProvider(widget.tourId));
     final user = ref.watch(currentUserProvider);
-    final canManage = user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
+    final canManage =
+        user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       body: tourAsync.when(
@@ -642,7 +643,7 @@ class _SchedulesTab extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.s8),
                       slotsAsync.when(
                         data: (slots) => Text(
-                          '$slots of ${schedule.capacity} slots available',
+                          '${schedule.availableCapacity} of ${schedule.capacity} spots available',
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: AppFontSizes.f12,
@@ -694,6 +695,7 @@ class _SchedulesTab extends ConsumerWidget {
                         loading: () => const SizedBox.shrink(),
                         error: (_, _) => const SizedBox.shrink(),
                       ),
+                      // check if the user is a customer and the schedule is open and in the future
                       if (isCustomer &&
                           schedule.status == ScheduleStatus.open &&
                           schedule.startDate.isAfter(DateTime.now())) ...[
@@ -706,26 +708,6 @@ class _SchedulesTab extends ConsumerWidget {
                             ),
                             child: const Text('Book This Schedule'),
                           ),
-                        ),
-                      ],
-                      if (canManage) ...[
-                        const SizedBox(height: AppSpacing.s10),
-                        Wrap(
-                          spacing: 8,
-                          children: ScheduleStatus.values.map((s) {
-                            return ChoiceChip(
-                              label: Text(
-                                s.label,
-                                style: const TextStyle(
-                                  fontSize: AppFontSizes.f11,
-                                ),
-                              ),
-                              selected: schedule.status == s,
-                              onSelected: (_) => ref
-                                  .read(scheduleControllerProvider.notifier)
-                                  .setStatus(schedule.id, s),
-                            );
-                          }).toList(),
                         ),
                       ],
                     ],
@@ -743,14 +725,18 @@ class _SchedulesTab extends ConsumerWidget {
 class _ReviewsTab extends ConsumerWidget {
   final String tourId;
   final bool canManage;
+
   const _ReviewsTab({required this.tourId, required this.canManage});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(reviewsByTourProvider(tourId));
+
     return reviewsAsync.when(
       loading: () => const LoadingWidget(),
+
       error: (e, _) => ErrorView(message: e.toString()),
+
       data: (reviews) {
         if (reviews.isEmpty) {
           return const Center(
@@ -760,19 +746,110 @@ class _ReviewsTab extends ConsumerWidget {
             ),
           );
         }
+
         return ListView.separated(
           padding: const EdgeInsets.all(AppSpacing.s20),
           itemCount: reviews.length,
+
           separatorBuilder: (_, _) => const Divider(height: AppSpacing.s24),
+
           itemBuilder: (context, index) {
             final review = reviews[index];
+
+            // Get reviewer profile
+            final userAsync = ref.watch(userByIdProvider(review.userId));
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    RatingStars(rating: review.rating.toDouble(), size: 14),
-                    const Spacer(),
+                    // --------------------------------
+                    // PROFILE IMAGE
+                    // --------------------------------
+                    userAsync.when(
+                      data: (user) {
+                        final hasProfileImage =
+                            user.profileImage != null &&
+                            user.profileImage!.isNotEmpty;
+
+                        return CircleAvatar(
+                          radius: 20,
+                          backgroundImage: hasProfileImage
+                              ? NetworkImage(user.profileImage!)
+                              : null,
+                          child: !hasProfileImage
+                              ? const Icon(Icons.person_outline)
+                              : null,
+                        );
+                      },
+
+                      loading: () => const CircleAvatar(
+                        radius: 20,
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+
+                      error: (_, _) => const CircleAvatar(
+                        radius: 20,
+                        child: Icon(Icons.person_outline),
+                      ),
+                    ),
+
+                    const SizedBox(width: AppSpacing.s10),
+
+                    // --------------------------------
+                    // USER NAME + RATING
+                    // --------------------------------
+                    Expanded(
+                      child: userAsync.when(
+                        data: (user) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+
+                            const SizedBox(height: AppSpacing.s2),
+
+                            RatingStars(
+                              rating: review.rating.toDouble(),
+                              size: 14,
+                            ),
+                          ],
+                        ),
+
+                        loading: () => const SizedBox(height: 40),
+
+                        error: (_, _) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'User',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: AppSpacing.s2),
+                            RatingStars(
+                              rating: review.rating.toDouble(),
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // --------------------------------
+                    // DATE
+                    // --------------------------------
                     Text(
                       Formatters.date(review.createdAt),
                       style: const TextStyle(
@@ -780,6 +857,10 @@ class _ReviewsTab extends ConsumerWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
+
+                    // --------------------------------
+                    // REPORT
+                    // --------------------------------
                     IconButton(
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(
@@ -793,19 +874,24 @@ class _ReviewsTab extends ConsumerWidget {
                           context: context,
                           builder: (context) {
                             final controller = TextEditingController();
+
                             return AlertDialog(
                               title: const Text('Report review'),
+
                               content: TextField(
                                 controller: controller,
+                                maxLines: 3,
                                 decoration: const InputDecoration(
                                   hintText: 'Why is this review inappropriate?',
                                 ),
                               ),
+
                               actions: [
                                 TextButton(
                                   onPressed: () => context.pop(),
                                   child: const Text('Cancel'),
                                 ),
+
                                 TextButton(
                                   onPressed: () => context.pop(controller.text),
                                   child: const Text('Report'),
@@ -814,6 +900,7 @@ class _ReviewsTab extends ConsumerWidget {
                             );
                           },
                         );
+
                         if (reason != null &&
                             reason.trim().isNotEmpty &&
                             context.mounted) {
@@ -823,6 +910,7 @@ class _ReviewsTab extends ConsumerWidget {
                                 reviewId: review.id,
                                 reason: reason.trim(),
                               );
+
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -838,6 +926,10 @@ class _ReviewsTab extends ConsumerWidget {
                         }
                       },
                     ),
+
+                    // --------------------------------
+                    // DELETE - ADMIN / MANAGER
+                    // --------------------------------
                     if (canManage)
                       IconButton(
                         visualDensity: VisualDensity.compact,
@@ -852,14 +944,18 @@ class _ReviewsTab extends ConsumerWidget {
                             context: context,
                             builder: (context) => AlertDialog(
                               title: const Text('Delete review'),
+
                               content: const Text(
-                                'Delete this review? This cannot be undone.',
+                                'Delete this review? '
+                                'This cannot be undone.',
                               ),
+
                               actions: [
                                 TextButton(
                                   onPressed: () => context.pop(false),
                                   child: const Text('Cancel'),
                                 ),
+
                                 TextButton(
                                   onPressed: () => context.pop(true),
                                   child: const Text('Delete'),
@@ -867,10 +963,12 @@ class _ReviewsTab extends ConsumerWidget {
                               ],
                             ),
                           );
+
                           if (confirmed == true) {
                             final error = await ref
                                 .read(adminReviewControllerProvider.notifier)
                                 .deleteReview(review.id);
+
                             if (context.mounted && error != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -884,8 +982,13 @@ class _ReviewsTab extends ConsumerWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.s6),
-                Text(review.comment),
+
+                // --------------------------------
+                // REVIEW COMMENT
+                // --------------------------------
+                const SizedBox(height: AppSpacing.s8),
+
+                Text(review.comment, style: const TextStyle(height: 1.4)),
               ],
             );
           },

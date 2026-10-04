@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/features/booking/presentation/screens/booking_participants_screen.dart';
 import 'package:travel_app/features/schedule/presentation/screens/assigned_schedule.dart';
 
 import '../../features/auth/presentation/providers/auth_provider.dart';
@@ -219,6 +220,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.mySchedules,
         builder: (context, state) => const MyAssignedSchedulesScreen(),
       ),
+      GoRoute(
+  path: AppRoutes.bookingParticipantsTemplate,
+  builder: (context, state) {
+    return BookingParticipantsScreen(
+      bookingId: state.pathParameters['id']!,
+    );
+  },
+),
     ],
   );
 });

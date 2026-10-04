@@ -112,6 +112,24 @@ class MyReviewsController extends AsyncNotifier<List<Review>> {
     );
     return result.when(success: (_) => null, failure: (f) => f.message);
   }
+
+  Future<String?> deleteReview(String id) async {
+    final repo = ref.read(reviewRepositoryProvider);
+
+    final result = await repo.deleteReview(id);
+
+    return result.when(
+      success: (_) {
+        refresh();
+
+        ref.invalidate(reviewsByTourProvider);
+        ref.invalidate(averageRatingForTourProvider);
+
+        return null;
+      },
+      failure: (f) => f.message,
+    );
+  }
 }
 
 final myReviewsControllerProvider =

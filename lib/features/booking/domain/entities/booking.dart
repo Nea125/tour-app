@@ -1,3 +1,4 @@
+
 import 'package:equatable/equatable.dart';
 
 enum BookingStatus { pending, paid, cancelled }
@@ -14,11 +15,23 @@ extension BookingStatusX on BookingStatus {
     }
   }
 
+
+
   static BookingStatus fromString(String value) {
-    return BookingStatus.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => BookingStatus.pending,
-    );
+    switch (value.trim().toLowerCase()) {
+      case 'paid':
+      case 'confirmed':
+      case 'completed':
+      case 'success':
+      case 'successful':
+        return BookingStatus.paid;
+      case 'cancelled':
+      case 'canceled':
+        return BookingStatus.cancelled;
+      case 'pending':
+      default:
+        return BookingStatus.pending;
+    }
   }
 }
 

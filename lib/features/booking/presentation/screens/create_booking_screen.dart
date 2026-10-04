@@ -36,36 +36,50 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
   }
 
   Future<void> _submit(int availableSlots) async {
-    if (!_formKey.currentState!.validate()) return;
-    final people = int.tryParse(_peopleController.text) ?? 0;
-    if (people < 1 || people > availableSlots) {
+  if (!_formKey.currentState!.validate()) return;
+
+  final people = int.tryParse(_peopleController.text) ?? 0;
+
+  if (people < 1 || people > availableSlots) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Only $availableSlots slot(s) available'),
+        backgroundColor: AppColors.error,
+      ),
+    );
+    return;
+  }
+
+  setState(() => _submitting = true);
+
+  final result = await ref
+      .read(myBookingsControllerProvider.notifier)
+      .createBooking(
+        tourScheduleId: widget.scheduleId,
+        numberOfPeople: people,
+        // specialRequest: _notesController.text.trim(),
+      );
+
+  if (!mounted) return;
+
+  setState(() => _submitting = false);
+
+  result.when(
+    success: (booking) {
+      context.pushReplacement(
+        AppRoutes.bookingParticipants(booking.id),
+      );
+    },
+    failure: (f) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Only $availableSlots slot(s) available'),
+          content: Text(f.message),
           backgroundColor: AppColors.error,
         ),
       );
-      return;
-    }
-    setState(() => _submitting = true);
-    final result = await ref
-        .read(myBookingsControllerProvider.notifier)
-        .createBooking(
-          tourScheduleId: widget.scheduleId,
-          numberOfPeople: people,
-          specialRequest: _notesController.text.trim(),
-        );
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    result.when(
-      // The booking is PENDING until paid; payment confirms it.
-      success: (booking) =>
-          context.pushReplacement(AppRoutes.payment(booking.id)),
-      failure: (f) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(f.message), backgroundColor: AppColors.error),
-      ),
-    );
-  }
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -135,18 +149,19 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                       validator: (v) {
                         final n = int.tryParse(v ?? '');
                         if (n == null || n < 1) return 'Enter a valid number';
-                        if (n > availableSlots)
+                        if (n > availableSlots){
                           return 'Only $availableSlots slot(s) available';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: AppSpacing.s16),
-                    CustomTextField(
-                      controller: _notesController,
-                      label: 'Special Requests (optional)',
-                      maxLines: 3,
-                      prefixIcon: const Icon(Icons.note_outlined),
-                    ),
+                    // CustomTextField(
+                    //   controller: _notesController,
+                    //   label: 'Special Requests (optional)',
+                    //   maxLines: 3,
+                    //   prefixIcon: const Icon(Icons.note_outlined),
+                    // ),
                     const SizedBox(height: AppSpacing.s24),
                     AnimatedBuilder(
                       animation: _peopleController,

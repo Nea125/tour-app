@@ -5,7 +5,6 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
-
 class PaymentFailedScreen extends StatelessWidget {
   final String bookingId;
   final bool cancelled;
@@ -71,8 +70,7 @@ class PaymentFailedScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.home_outlined),
-                    label: const Text('Back to Home'),
+                    label: const Text('Go Back'),
                     onPressed: () => context.go(AppRoutes.home),
                   ),
                 ),

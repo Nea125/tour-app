@@ -6,7 +6,11 @@ class TourSchedule extends Equatable {
   final String tourId;
   final DateTime startDate;
   final DateTime endDate;
-  final int capacity;
+
+  // Response only
+  final int? capacity;
+  final int? availableCapacity;
+
   final ScheduleStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -16,7 +20,8 @@ class TourSchedule extends Equatable {
     required this.tourId,
     required this.startDate,
     required this.endDate,
-    required this.capacity,
+    this.capacity,
+    this.availableCapacity,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -28,6 +33,7 @@ class TourSchedule extends Equatable {
     DateTime? startDate,
     DateTime? endDate,
     int? capacity,
+    int? availableCapacity,
     ScheduleStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -38,6 +44,7 @@ class TourSchedule extends Equatable {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       capacity: capacity ?? this.capacity,
+      availableCapacity: availableCapacity ?? this.availableCapacity,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -51,6 +58,7 @@ class TourSchedule extends Equatable {
     startDate,
     endDate,
     capacity,
+    availableCapacity,
     status,
     createdAt,
     updatedAt,

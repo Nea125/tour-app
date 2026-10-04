@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/entities/user_role.dart';
 import '../../../../core/entities/user_status.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_network_image.dart';
@@ -30,8 +29,6 @@ class BookingDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingAsync = ref.watch(bookingByIdProvider(bookingId));
     final user = ref.watch(currentUserProvider);
-    final canManage =
-        user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Booking Details')),
@@ -53,7 +50,8 @@ class BookingDetailScreen extends ConsumerWidget {
               false;
           final bookingUserAsync = ref.watch(userByIdProvider(booking.userId));
           final isOwner = user?.id == booking.userId;
-          // Travelers and cancellation are locked once the booking is paid.
+          // Travelers are managed during checkout only; this screen is
+          // read-only for them.
           final isPending = booking.status == BookingStatus.pending;
 
           return ListView(
@@ -180,16 +178,6 @@ class BookingDetailScreen extends ConsumerWidget {
                       fontSize: AppFontSizes.f16,
                     ),
                   ),
-                  if (isPending)
-                    TextButton.icon(
-                      icon: const Icon(
-                        Icons.person_add_alt_1_outlined,
-                        size: 18,
-                      ),
-                      label: const Text('Add'),
-                      onPressed: () =>
-                          context.push(AppRoutes.addParticipant(booking.id)),
-                    ),
                 ],
               ),
               participantsAsync.when(
@@ -213,19 +201,6 @@ class BookingDetailScreen extends ConsumerWidget {
                           subtitle: Text(
                             '${p.gender.label} • ${p.age} yrs • ${p.phone}',
                           ),
-                          trailing: isPending
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.delete_outline_rounded,
-                                    color: AppColors.error,
-                                  ),
-                                  onPressed: () => ref
-                                      .read(
-                                        participantControllerProvider.notifier,
-                                      )
-                                      .removeParticipant(p.id, booking.id),
-                                )
-                              : null,
                         ),
                       );
                     }).toList(),
@@ -297,9 +272,10 @@ class BookingDetailScreen extends ConsumerWidget {
                 },
               ),
               const SizedBox(height: AppSpacing.s12),
-              if (isOwner && booking.status == BookingStatus.pending)
-                scheduleAsync.when(
-                  data: (schedule) => booking.canPayBefore(schedule.startDate)
+              if (isOwner && isPending)
+                // The backend decides whether this booking can still be paid.
+                ref.watch(canPayBookingProvider(booking.id)).when(
+                  data: (eligibility) => eligibility.canPay
                       ? Padding(
                           padding: const EdgeInsets.only(
                             bottom: AppSpacing.s8,
@@ -307,68 +283,23 @@ class BookingDetailScreen extends ConsumerWidget {
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.payment_rounded),
                             label: const Text('Pay Now'),
-                            onPressed: () =>
-                                context.push(AppRoutes.payment(booking.id)),
+                            // Travelers come first; that screen continues to
+                            // payment once everyone is registered.
+                            onPressed: () => context.push(
+                              AppRoutes.bookingParticipants(booking.id),
+                            ),
                           ),
                         )
-                      : const Padding(
-                          padding: EdgeInsets.only(bottom: AppSpacing.s8),
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                           child: Text(
-                            'This tour has already started, so this unpaid '
-                            'booking can no longer be paid.',
-                            style: TextStyle(color: AppColors.warning),
+                            eligibility.message ??
+                                'This booking can no longer be paid.',
+                            style: const TextStyle(color: AppColors.warning),
                           ),
                         ),
                   loading: () => const SizedBox.shrink(),
                   error: (_, _) => const SizedBox.shrink(),
-                ),
-              if ((isOwner || canManage) && isPending)
-                OutlinedButton.icon(
-                  icon: const Icon(
-                    Icons.cancel_outlined,
-                    color: AppColors.error,
-                  ),
-                  label: const Text(
-                    'Cancel Booking',
-                    style: TextStyle(color: AppColors.error),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.error),
-                  ),
-                  onPressed: () async {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Cancel booking'),
-                        content: const Text(
-                          'Are you sure you want to cancel this booking?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => context.pop(false),
-                            child: const Text('No'),
-                          ),
-                          TextButton(
-                            onPressed: () => context.pop(true),
-                            child: const Text('Yes, Cancel'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed != true) return;
-                    final error = await ref
-                        .read(myBookingsControllerProvider.notifier)
-                        .cancelBooking(booking.id);
-                    ref.invalidate(bookingByIdProvider(bookingId));
-                    if (context.mounted && error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(error),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
-                    }
-                  },
                 ),
               if (isOwner) ...[
                 if (booking.status == BookingStatus.paid &&

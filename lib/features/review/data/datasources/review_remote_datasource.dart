@@ -11,6 +11,7 @@ class ReviewRemoteDataSource {
   static const String _BY_TOUR = "/reviews/tour";
   static const String _BY_BOOKING = "/reviews/booking";
   static const String _MY_BOOKINGS = "/bookings/my";
+  static const String _MY_REVIEWS = "/reviews/my";
 
   final BaseApiService api;
   ReviewRemoteDataSource(this.api);
@@ -22,21 +23,21 @@ class ReviewRemoteDataSource {
     );
   }
 
-  /// There is no "reviews by user" endpoint: look up the review of each of
-  /// the signed-in user's reviewable bookings instead.
+
   Future<List<ReviewModel>> getMyReviews() async {
-    final bookings = await api.onRequest(
-      path: _MY_BOOKINGS,
+    return api.onRequest(
+      path: '/reviews/my',
       method: HTTPMethod.GET,
-      onSuccess: BaseApiService.listOf,
+      onSuccess: (response) {
+        final page = response.data['data'] as Map<String, dynamic>;
+
+        final items = page['items'] as List<dynamic>;
+
+        return items
+            .map((json) => ReviewModel.fromApi(json as Map<String, dynamic>))
+            .toList();
+      },
     );
-    final reviewable = bookings.where(
-      (b) => b['status'] == 'CONFIRMED' || b['status'] == 'COMPLETED',
-    );
-    final reviews = await Future.wait(
-      reviewable.map((b) => getReviewByBookingId(b['id'].toString())),
-    );
-    return reviews.whereType<ReviewModel>().toList();
   }
 
   Future<ReviewModel?> getReviewByBookingId(String bookingId) async {
@@ -79,6 +80,28 @@ class ReviewRemoteDataSource {
       onSuccess: (r) => ReviewModel.fromApi(BaseApiService.dataOf(r)),
     );
   }
+
+  Future<ReviewModel> updateReview({
+  required String id,
+  int? rating,
+  String? comment,
+}) async {
+  final response = await api.onRequest(
+    path: '$_REVIEWS/$id',
+    method: HTTPMethod.PATCH,
+    data: {
+      if (rating != null) 'rating': rating,
+      if (comment != null) 'comment': comment,
+    },
+    onSuccess: (response) {
+      return ReviewModel.fromApi(
+        response.data['data'] as Map<String, dynamic>,
+      );
+    },
+  );
+
+  return response;
+}
 
   Future<void> deleteReview(String id) {
     return api.onRequest(

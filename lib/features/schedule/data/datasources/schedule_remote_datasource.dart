@@ -62,7 +62,7 @@ class ScheduleRemoteDataSource {
         'tourId': ApiJson.toId(schedule.tourId),
         'startDate': ApiJson.localDate(schedule.startDate),
         'endDate': ApiJson.localDate(schedule.endDate),
-        'capacity': schedule.capacity,
+        // 'capacity': schedule.capacity,
       },
       onSuccess: (r) => TourScheduleModel.fromApi(BaseApiService.dataOf(r)),
     );
@@ -75,7 +75,7 @@ class ScheduleRemoteDataSource {
     return _patch(schedule.id, {
       'startDate': ApiJson.localDate(schedule.startDate),
       'endDate': ApiJson.localDate(schedule.endDate),
-      'capacity': schedule.capacity,
+      // 'capacity': schedule.capacity,
       'status': TourScheduleModel.statusToApi(schedule.status),
     });
   }

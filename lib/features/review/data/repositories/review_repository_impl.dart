@@ -33,15 +33,22 @@ class ReviewRepositoryImpl implements ReviewRepository {
     ),
   );
 
+
   @override
   Future<Result<Review>> updateReview({
     required String id,
     int? rating,
     String? comment,
   }) async {
-    return const Error(
-      ValidationFailure('Editing reviews is not supported yet'),
-    );
+    return guardResult(() async {
+      final response = await dataSource.updateReview(
+        id: id,
+        rating: rating,
+        comment: comment,
+      );
+
+      return response;
+    });
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'package:travel_app/core/constants/log.dart';
+
 import '../../../../core/network/api_json.dart';
 import '../../domain/entities/schedule_status.dart';
 import '../../domain/entities/tour_schedule.dart';
@@ -9,18 +11,21 @@ class TourScheduleModel extends TourSchedule {
     required super.startDate,
     required super.endDate,
     required super.capacity,
+    required super.availableCapacity,
     required super.status,
     required super.createdAt,
     required super.updatedAt,
   });
 
   factory TourScheduleModel.fromJson(Map<String, dynamic> json) {
+
     return TourScheduleModel(
       id: json['id'] as String,
       tourId: json['tourId'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: DateTime.parse(json['endDate'] as String),
       capacity: json['capacity'] as int,
+      availableCapacity: json['availableCapacity'] as int,
       status: ScheduleStatusX.fromString(json['status'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -36,6 +41,7 @@ class TourScheduleModel extends TourSchedule {
       startDate: ApiJson.date(json['startDate']),
       endDate: ApiJson.date(json['endDate']),
       capacity: ApiJson.integer(json['capacity']),
+      availableCapacity: ApiJson.integer(json['availableCapacity']),
       status: statusFromApi(json['status']),
       createdAt: now,
       updatedAt: now,
@@ -61,6 +67,7 @@ class TourScheduleModel extends TourSchedule {
       startDate: s.startDate,
       endDate: s.endDate,
       capacity: s.capacity,
+      availableCapacity: s.availableCapacity,
       status: s.status,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
@@ -73,7 +80,7 @@ class TourScheduleModel extends TourSchedule {
       'tourId': tourId,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
-      'capacity': capacity,
+      // 'capacity': capacity,
       'status': status.name,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),

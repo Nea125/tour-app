@@ -26,7 +26,6 @@ class ScheduleFormScreen extends ConsumerStatefulWidget {
 
 class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _capacityController;
   DateTime _startDate = DateTime.now().add(const Duration(days: 14));
   DateTime _endDate = DateTime.now().add(const Duration(days: 18));
   ScheduleStatus _status = ScheduleStatus.open;
@@ -38,9 +37,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   void initState() {
     super.initState();
     final s = widget.schedule;
-    _capacityController = TextEditingController(
-      text: s?.capacity.toString() ?? '',
-    );
+
     _startDate = s?.startDate ?? _startDate;
     _endDate = s?.endDate ?? _endDate;
     _status = s?.status ?? ScheduleStatus.open;
@@ -48,7 +45,6 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
 
   @override
   void dispose() {
-    _capacityController.dispose();
     super.dispose();
   }
 
@@ -88,7 +84,6 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
       tourId: widget.tourId,
       startDate: _startDate,
       endDate: _endDate,
-      capacity: int.parse(_capacityController.text.trim()),
       status: _status,
       createdAt: widget.schedule?.createdAt ?? now,
       updatedAt: now,
@@ -151,13 +146,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.s16),
-                CustomTextField(
-                  controller: _capacityController,
-                  label: 'Capacity',
-                  keyboardType: TextInputType.number,
-                  validator: (v) => Validators.number(v, label: 'Capacity'),
-                ),
+
                 const SizedBox(height: AppSpacing.s16),
                 DropdownButtonFormField<ScheduleStatus>(
                   initialValue: _status,

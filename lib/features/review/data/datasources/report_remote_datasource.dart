@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 
 import '../../../../core/network/api_json.dart';
 import '../../../../core/network/base_api_service.dart';
@@ -5,105 +6,37 @@ import '../../../../core/network/http_method.dart';
 import '../../../booking/domain/entities/booking.dart';
 import '../../domain/entities/report_summary.dart';
 
+/// `/reports` endpoints of the tour-management API.
+///
+/// GET /reports/summary            -> ReportResponse
+/// GET /reports/bookings/status    -> [BookingStatusReportResponse]
+/// GET /reports/tours/top?limit=   -> [TopTourResponse]
+/// GET /reports/destinations/top   -> [TopDestinationResponse]
+///
+/// The backend has no monthly-revenue endpoint, so that one chart is still
+/// built from `/bookings` (PAID bookings only).
 class ReportRemoteDataSource {
   static const String _REPORTS = "/reports";
+  static const String _SUMMARY = "$_REPORTS/summary";
+  static const String _BOOKINGS_BY_STATUS = "$_REPORTS/bookings/status";
+  static const String _TOP_TOURS = "$_REPORTS/tours/top";
+  static const String _TOP_DESTINATIONS = "$_REPORTS/destinations/top";
   static const String _BOOKINGS = "/bookings";
-  static const String _SCHEDULES = "/tour-schedule";
-  static const String _TOURS = "/tours";
-  static const String _DESTINATIONS = "/destinations";
-  static const String _REVIEWS_BY_TOUR = "/reviews/tour";
+  static const int _topLimit = 5;
 
   final BaseApiService api;
   ReportRemoteDataSource(this.api);
 
-  Future<List<Map<String, dynamic>>> _all(String path) =>
-      api.getAllPages(path: path, fromJson: (json) => json);
-
   Future<ReportSummary> getReportSummary() async {
-    final results = await Future.wait([
-      api.onRequest(
-        path: _REPORTS,
-        method: HTTPMethod.GET,
-        onSuccess: BaseApiService.dataOf,
-      ),
-      _all(_BOOKINGS),
-      _all(_SCHEDULES),
-      _all(_TOURS),
-      _all(_DESTINATIONS),
+    final results = await Future.wait<Object>([
+      _summary(),
+      _bookingsByStatus(),
+      _topTours(),
+      _topDestinations(),
+      _monthlyRevenue(),
     ]);
+
     final report = results[0] as Map<String, dynamic>;
-    final bookings = results[1] as List<Map<String, dynamic>>;
-    final schedules = results[2] as List<Map<String, dynamic>>;
-    final tours = results[3] as List<Map<String, dynamic>>;
-    final destinations = results[4] as List<Map<String, dynamic>>;
-
-    BookingStatus statusOf(Map<String, dynamic> b) =>
-        BookingStatusX.fromString(ApiJson.enumName(b['status']));
-    double priceOf(Map<String, dynamic> b) => ApiJson.decimal(b['totalPrice']);
-
-    final tourIdBySchedule = {for (final s in schedules) ApiJson.id(s['id']): ApiJson.id(s['tourId']),
-    };
-    String? tourIdOf(Map<String, dynamic> b) => tourIdBySchedule[ApiJson.id(b['scheduleId'])];
-
-    final active = bookings
-        .where((b) => statusOf(b) != BookingStatus.cancelled)
-        .toList();
-    final paid = active
-        .where((b) => statusOf(b) != BookingStatus.pending)
-        .toList();
-
-    final now = DateTime.now();
-    final monthlyRevenue = <MonthlyRevenue>[
-      for (var i = 5; i >= 0; i--)
-        () {
-          final month = DateTime(now.year, now.month - i);
-          final next = DateTime(now.year, now.month - i + 1);
-          final revenue = paid
-              .where((b) {
-                final date = ApiJson.date(b['bookingDate']);
-                return !date.isBefore(month) && date.isBefore(next);
-              })
-              .fold<double>(0, (sum, b) => sum + priceOf(b));
-          return MonthlyRevenue(
-            label: _months[month.month - 1],
-            revenue: revenue,
-          );
-        }(),
-    ];
-
-    final topTours = [
-      for (final tour in tours)
-        () {
-          final id = ApiJson.id(tour['id']);
-          final tourBookings = active.where((b) => tourIdOf(b) == id);
-          return TourPerformance(
-            tourId: id,
-            title: ApiJson.string(tour['title']),
-            bookings: tourBookings.length,
-            revenue: tourBookings
-                .where((b) => statusOf(b) != BookingStatus.pending)
-                .fold<double>(0, (sum, b) => sum + priceOf(b)),
-            rating: 0,
-          );
-        }(),
-    ]..sort((a, b) => b.revenue.compareTo(a.revenue));
-    final top5 = await Future.wait(topTours.take(5).map(_withRating));
-
-    final topDestinations = [
-      for (final dest in destinations)
-        () {
-          final id = ApiJson.id(dest['id']);
-          final tourIds = tours
-              .where((t) => ApiJson.id(t['destinationId']) == id)
-              .map((t) => ApiJson.id(t['id']))
-              .toSet();
-          return DestinationPerformance(
-            destinationId: id,
-            name: ApiJson.string(dest['name']),
-            bookings: active.where((b) => tourIds.contains(tourIdOf(b))).length,
-          );
-        }(),
-    ]..sort((a, b) => b.bookings.compareTo(a.bookings));
 
     return ReportSummary(
       totalRevenue: ApiJson.decimal(report['totalRevenue']),
@@ -118,43 +51,108 @@ class ReportRemoteDataSource {
       averageRating: double.parse(
         ApiJson.decimal(report['averageRating']).toStringAsFixed(1),
       ),
-      bookingsByStatus: {
-        for (final status in BookingStatus.values)
-          status: bookings.where((b) => statusOf(b) == status).length,
-      },
-      monthlyRevenue: monthlyRevenue,
-      topTours: top5,
-      topDestinations: topDestinations.take(5).toList(),
+      bookingsByStatus: results[1] as Map<BookingStatus, int>,
+      topTours: results[2] as List<TourPerformance>,
+      topDestinations: results[3] as List<DestinationPerformance>,
+      monthlyRevenue: results[4] as List<MonthlyRevenue>,
     );
   }
 
-  Future<TourPerformance> _withRating(TourPerformance tour) async {
-    final reviews = await _all('$_REVIEWS_BY_TOUR/${tour.tourId}');
-    if (reviews.isEmpty) return tour;
-    final average =
-        reviews.fold<int>(0, (sum, r) => sum + ApiJson.integer(r['rating'])) /
-        reviews.length;
-    return TourPerformance(
-      tourId: tour.tourId,
-      title: tour.title,
-      bookings: tour.bookings,
-      revenue: tour.revenue,
-      rating: double.parse(average.toStringAsFixed(1)),
+  Future<Map<String, dynamic>> _summary() {
+    return api.onRequest(
+      path: _SUMMARY,
+      method: HTTPMethod.GET,
+      onSuccess: BaseApiService.dataOf,
     );
+  }
+
+  /// Backend returns only statuses that have bookings; fill the rest with 0
+  /// so every status still shows on the dashboard.
+  Future<Map<BookingStatus, int>> _bookingsByStatus() {
+    return api.onRequest(
+      path: _BOOKINGS_BY_STATUS,
+      method: HTTPMethod.GET,
+      onSuccess: (r) {
+        final counts = {for (final s in BookingStatus.values) s: 0};
+        for (final row in BaseApiService.listOf(r)) {
+          final status = BookingStatusX.fromString(
+            ApiJson.enumName(row['status']),
+          );
+          counts[status] = counts[status]! + ApiJson.integer(row['total']);
+        }
+        return counts;
+      },
+    );
+  }
+
+  Future<List<TourPerformance>> _topTours() {
+    return api.onRequest(
+      path: '$_TOP_TOURS?limit=$_topLimit',
+      method: HTTPMethod.GET,
+      onSuccess: (r) => [
+        for (final t in BaseApiService.listOf(r))
+          TourPerformance(
+            tourId: ApiJson.id(t['id']),
+            title: ApiJson.string(t['title']),
+            bookings: ApiJson.integer(t['bookings']),
+            revenue: ApiJson.decimal(t['revenue']),
+            rating: double.parse(
+              ApiJson.decimal(t['rating']).toStringAsFixed(1),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<List<DestinationPerformance>> _topDestinations() {
+    return api.onRequest(
+      path: '$_TOP_DESTINATIONS?limit=$_topLimit',
+      method: HTTPMethod.GET,
+      onSuccess: (r) => [
+        for (final d in BaseApiService.listOf(r))
+          DestinationPerformance(
+            destinationId: ApiJson.id(d['id']),
+            name: ApiJson.string(d['name']),
+            bookings: ApiJson.integer(d['bookings']),
+          ),
+      ],
+    );
+  }
+
+  /// Revenue of PAID bookings for the last 6 months (oldest first).
+  Future<List<MonthlyRevenue>> _monthlyRevenue() async {
+    final bookings = await api.getAllPages(
+      path: _BOOKINGS,
+      fromJson: (json) => json,
+    );
+    final paid = bookings.where(
+      (b) =>
+          BookingStatusX.fromString(ApiJson.enumName(b['status'])) ==
+          BookingStatus.paid,
+    );
+
+    final now = DateTime.now();
+    return [
+      for (var i = 5; i >= 0; i--)
+        () {
+          final month = DateTime(now.year, now.month - i);
+          final next = DateTime(now.year, now.month - i + 1);
+          final revenue = paid
+              .where((b) {
+                final date = ApiJson.date(b['bookingDate']);
+                return !date.isBefore(month) && date.isBefore(next);
+              })
+              .fold<double>(0, (sum, b) => sum + ApiJson.decimal(b['totalPrice']));
+          return MonthlyRevenue(
+            label: _months[month.month - 1],
+            revenue: revenue,
+          );
+        }(),
+    ];
   }
 
   static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 }

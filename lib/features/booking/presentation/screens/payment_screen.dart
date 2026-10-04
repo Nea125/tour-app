@@ -11,6 +11,7 @@ import '../../../schedule/presentation/providers/schedule_provider.dart';
 import '../../../tour/presentation/providers/tour_provider.dart';
 import '../../domain/entities/booking.dart';
 import '../providers/booking_provider.dart';
+import '../providers/participant_provider.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -45,6 +46,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final _expiryController = TextEditingController();
   final _cvvController = TextEditingController();
   bool _processing = false;
+  bool _redirecting = false;
 
   @override
   void dispose() {
@@ -55,9 +57,21 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     super.dispose();
   }
 
+  /// Payment comes after travelers: if the booking is missing travelers,
+  /// send the user back to that step instead of showing the card form.
+  void _redirectToParticipants() {
+    if (_redirecting) return;
+    _redirecting = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.pushReplacement(AppRoutes.bookingParticipants(widget.bookingId));
+    });
+  }
+
   String get _digits => _numberController.text.replaceAll(' ', '');
 
-  Future<void> _confirmCancel() async {
+  Future<void> _confirmCancel( WidgetRef ref ) async {
+    final bookingNotifier = ref.read(myBookingsControllerProvider.notifier);
     if (_processing) return;
     final cancel = await showDialog<bool>(
       context: context,
@@ -126,18 +140,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final bookingAsync = ref.watch(bookingByIdProvider(widget.bookingId));
-
+   
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _confirmCancel();
+        if (!didPop) _confirmCancel(ref);
       },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Payment'),
           leading: IconButton(
             icon: const Icon(Icons.close_rounded),
-            onPressed: _confirmCancel,
+            onPressed: () => _confirmCancel(ref),
           ),
         ),
         body: bookingAsync.when(
@@ -156,16 +170,39 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   loading: () => const LoadingWidget(),
                   error: (e, _) => ErrorView(message: e.toString()),
                   data: (tour) {
-                    if (!booking.canPayBefore(schedule.startDate)) {
-                      return _NotPayable(booking: booking);
+                    if (booking.status != BookingStatus.pending) {
+                      return _NotPayable(
+                        bookingId: booking.id,
+                        message:
+                            'This booking is ${booking.status.label.toLowerCase()} and needs no payment.',
+                      );
                     }
-                    final total = tour.price * booking.numberOfPeople;
-                    return _buildForm(
-                      title: tour.title,
-                      dates:
-                          '${Formatters.date(schedule.startDate)} → ${Formatters.date(schedule.endDate)}',
-                      booking: booking,
-                      total: total,
+                    // Ask the backend whether this booking can be paid now.
+                    final canPayAsync = ref.watch(
+                      canPayBookingProvider(booking.id),
+                    );
+                    return canPayAsync.when(
+                      loading: () => const LoadingWidget(),
+                      error: (e, _) => ErrorView(
+                        message: e.toString(),
+                        onRetry: () =>
+                            ref.invalidate(canPayBookingProvider(booking.id)),
+                      ),
+                      data: (eligibility) {
+                        if (!eligibility.canPay) {
+                          return _NotPayable(
+                            bookingId: booking.id,
+                            message: eligibility.message,
+                          );
+                        }
+                        return _buildPayable(
+                          booking: booking,
+                          title: tour.title,
+                          dates:
+                              '${Formatters.date(schedule.startDate)} → ${Formatters.date(schedule.endDate)}',
+                          total: tour.price * booking.numberOfPeople,
+                        );
+                      },
                     );
                   },
                 );
@@ -174,6 +211,39 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           },
         ),
       ),
+    );
+  }
+
+  /// Payment comes after travelers: until every traveler is registered,
+  /// send the user back to that step instead of showing the card form.
+  Widget _buildPayable({
+    required Booking booking,
+    required String title,
+    required String dates,
+    required num total,
+  }) {
+    final participantsAsync = ref.watch(
+      participantsByBookingProvider(booking.id),
+    );
+    return participantsAsync.when(
+      loading: () => const LoadingWidget(),
+      error: (e, _) => ErrorView(
+        message: e.toString(),
+        onRetry: () =>
+            ref.invalidate(participantsByBookingProvider(booking.id)),
+      ),
+      data: (participants) {
+        if (participants.length < booking.numberOfPeople) {
+          _redirectToParticipants();
+          return const LoadingWidget();
+        }
+        return _buildForm(
+          title: title,
+          dates: dates,
+          booking: booking,
+          total: total,
+        );
+      },
     );
   }
 
@@ -322,7 +392,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           ),
           const SizedBox(height: AppSpacing.s8),
           TextButton(
-            onPressed: _processing ? null : _confirmCancel,
+            onPressed: _processing ? null : () => _confirmCancel(ref),
             child: const Text(
               'Cancel Payment',
               style: TextStyle(color: AppColors.error),
@@ -334,16 +404,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 }
 
-/// Shown when the booking was paid, cancelled, or its tour already began.
+/// Shown when the booking can't be paid (already paid/cancelled, or the
+/// backend's can-pay check said no).
 class _NotPayable extends StatelessWidget {
-  final Booking booking;
-  const _NotPayable({required this.booking});
+  final String bookingId;
+  final String message;
+  const _NotPayable({required this.bookingId, required this.message});
 
   @override
   Widget build(BuildContext context) {
-    final message = booking.status == BookingStatus.pending
-        ? 'This tour has already started, so the booking can no longer be paid.'
-        : 'This booking is ${booking.status.label.toLowerCase()} and needs no payment.';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.s24),
@@ -359,7 +428,7 @@ class _NotPayable extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.s20),
             ElevatedButton(
-              onPressed: () => openBookingFromHome(context, booking.id),
+              onPressed: () => openBookingFromHome(context, bookingId),
               child: const Text('View Booking'),
             ),
           ],

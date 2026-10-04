@@ -43,6 +43,12 @@ class AppRoutes {
   static String createBooking(String scheduleId) =>
       '/create-booking/$scheduleId';
 
+      static const bookingParticipantsTemplate =
+    '/booking/:id/participants';
+
+static String bookingParticipants(String id) =>
+    '/booking/$id/participants';
+
   // ---------------- Payment ----------------
   static const paymentTemplate = '/payment/:bookingId';
   static String payment(String bookingId) => '/payment/$bookingId';

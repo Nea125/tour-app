@@ -1,5 +1,6 @@
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/result.dart';
+import '../../domain/entities/payment_eligibility.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../datasources/booking_remote_datasource.dart';
@@ -29,7 +30,6 @@ class BookingRepositoryImpl implements BookingRepository {
     required String userId,
     required String tourScheduleId,
     required int numberOfPeople,
-    String specialRequest = '',
   }) => guardResult(
     () => dataSource.createBooking(
       tourScheduleId: tourScheduleId,
@@ -59,4 +59,8 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<Result<Booking>> payBooking(String id) =>
       guardResult(() => dataSource.payBooking(id));
+
+  @override
+  Future<Result<PaymentEligibility>> canPayBooking(String id) =>
+      guardResult(() => dataSource.canPayBooking(id));
 }

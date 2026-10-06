@@ -8,7 +8,7 @@ class Formatters {
     decimalDigits: 0,
   );
   static final DateFormat _date = DateFormat('MMM d, yyyy');
-  static final DateFormat _dateTime = DateFormat('MMM d, yyyy • h:mm a');
+  static final DateFormat _dateTime = DateFormat('MMM d, yyyy • h:mm:ss a');
   static final DateFormat _shortDate = DateFormat('MMM d');
 
   static String currency(num value) => _currency.format(value);

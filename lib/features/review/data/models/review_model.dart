@@ -28,7 +28,6 @@ class ReviewModel extends Review {
 
   /// From the backend's `ReviewResponse` (no timestamps).
   factory ReviewModel.fromApi(Map<String, dynamic> json) {
-    final now = DateTime.now();
     return ReviewModel(
       id: ApiJson.id(json['id']),
       userId: ApiJson.id(json['userId']),
@@ -36,8 +35,12 @@ class ReviewModel extends Review {
       bookingId: ApiJson.id(json['bookingId']),
       rating: ApiJson.integer(json['rating']),
       comment: ApiJson.string(json['comment']),
-      createdAt: now,
-      updatedAt: now,
+      createdAt: json['createdAt'] != null
+          ? ApiJson.localDateTime(json['createdAt'])!
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? ApiJson.localDateTime(json['updatedAt'])
+          : null,
     );
   }
 
@@ -63,7 +66,7 @@ class ReviewModel extends Review {
       'rating': rating,
       'comment': comment,
       'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 }

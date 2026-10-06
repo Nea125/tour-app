@@ -23,7 +23,6 @@ class ReviewRemoteDataSource {
     );
   }
 
-
   Future<List<ReviewModel>> getMyReviews() async {
     return api.onRequest(
       path: '/reviews/my',
@@ -45,7 +44,7 @@ class ReviewRemoteDataSource {
       return await api.onRequest(
         path: '$_BY_BOOKING/$bookingId',
         method: HTTPMethod.GET,
-        // `data: null` means the booking has no review yet.
+        
         onSuccess: (r) => r.data['data'] == null
             ? null
             : ReviewModel.fromApi(BaseApiService.dataOf(r)),
@@ -82,26 +81,26 @@ class ReviewRemoteDataSource {
   }
 
   Future<ReviewModel> updateReview({
-  required String id,
-  int? rating,
-  String? comment,
-}) async {
-  final response = await api.onRequest(
-    path: '$_REVIEWS/$id',
-    method: HTTPMethod.PATCH,
-    data: {
-      if (rating != null) 'rating': rating,
-      if (comment != null) 'comment': comment,
-    },
-    onSuccess: (response) {
-      return ReviewModel.fromApi(
-        response.data['data'] as Map<String, dynamic>,
-      );
-    },
-  );
+    required String id,
+    int? rating,
+    String? comment,
+  }) async {
+    final response = await api.onRequest(
+      path: '$_REVIEWS/$id',
+      method: HTTPMethod.PATCH,
+      data: {
+        if (rating != null) 'rating': rating,
+        if (comment != null) 'comment': comment,
+      },
+      onSuccess: (response) {
+        return ReviewModel.fromApi(
+          response.data['data'] as Map<String, dynamic>,
+        );
+      },
+    );
 
-  return response;
-}
+    return response;
+  }
 
   Future<void> deleteReview(String id) {
     return api.onRequest(

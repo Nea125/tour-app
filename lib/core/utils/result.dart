@@ -2,7 +2,6 @@ import '../error/failures.dart';
 import '../network/dio_exception.dart';
 import '../network/dio_helper.dart';
 
-
 sealed class Result<T> {
   const Result();
 

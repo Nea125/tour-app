@@ -1,4 +1,4 @@
-enum UserStatus { active, inactive, suspended }
+enum UserStatus { active, inactive }
 
 extension UserStatusX on UserStatus {
   String get label {
@@ -7,8 +7,6 @@ extension UserStatusX on UserStatus {
         return 'Active';
       case UserStatus.inactive:
         return 'Inactive';
-      case UserStatus.suspended:
-        return 'Suspended';
     }
   }
 

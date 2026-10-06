@@ -34,26 +34,51 @@ class DestinationRemoteDataSource {
     );
   }
 
-  /// Multipart: the fields plus an optional `images` file picked on-device.
-  Future<DestinationModel> createDestination(Destination d) async {
-    final form = FormData.fromMap({
-      'name': d.name,
-      'description': d.description,
-      'province': d.province,
-      'country': d.country,
-      'latitude': d.latitude,
-      'longitude': d.longitude,
-    });
-    if (ApiJson.isLocalFile(d.imageUrl)) {
-      form.files.add(MapEntry('images', await ApiJson.file(d.imageUrl)));
-    }
-    return api.onRequest(
-      path: _DESTINATIONS,
-      method: HTTPMethod.POST,
-      data: form,
-      onSuccess: (r) => DestinationModel.fromApi(BaseApiService.dataOf(r)),
-    );
+  // /// Multipart: the fields plus an optional `images` file picked on-device.
+  // Future<DestinationModel> createDestination(Destination d) async {
+  //   final form = FormData.fromMap({
+  //     'name': d.name,
+  //     'description': d.description,
+  //     'province': d.province,
+  //     'country': d.country,
+  //     'latitude': d.latitude,
+  //     'longitude': d.longitude,
+  //   });
+  //   if (ApiJson.isLocalFile(d.imageUrl)) {
+  //     form.files.add(MapEntry('images', await ApiJson.file(d.imageUrl)));
+  //   }
+  //   return api.onRequest(
+  //     path: _DESTINATIONS,
+  //     method: HTTPMethod.POST,
+  //     data: form,
+  //     onSuccess: (r) => DestinationModel.fromApi(BaseApiService.dataOf(r)),
+  //   );
+  // }
+
+  /// Multipart: the fields plus every `images` file picked on-device.
+Future<DestinationModel> createDestination(Destination d) async {
+  final form = FormData.fromMap({
+    'name': d.name,
+    'description': d.description,
+    'province': d.province,
+    'country': d.country,
+    'latitude': d.latitude,
+    'longitude': d.longitude,
+  });
+
+  // Use the full list; fall back to the cover for older callers.
+  final paths = d.images.isNotEmpty ? d.images : [d.imageUrl];
+  for (final path in paths.where(ApiJson.isLocalFile)) {
+    form.files.add(MapEntry('images', await ApiJson.file(path)));
   }
+
+  return api.onRequest(
+    path: _DESTINATIONS,
+    method: HTTPMethod.POST,
+    data: form,
+    onSuccess: (r) => DestinationModel.fromApi(BaseApiService.dataOf(r)),
+  );
+}
 
   /// Patches the fields, then replaces the cover image when a new one was
   /// picked on-device.

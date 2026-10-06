@@ -17,7 +17,7 @@ class ContactUsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.s20),
         children: [
-          const Center(child: AppLogo(size: 56)),
+          const Center(child: AppLogo(size: 120)),
           const SizedBox(height: AppSpacing.s20),
           Card(
             child: Column(

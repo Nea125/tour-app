@@ -72,9 +72,7 @@ class UserRepositoryImpl implements UserRepository {
   // The API has no endpoint for changing a user's status.
   @override
   Future<Result<void>> setUserStatus(String id, UserStatus status) async =>
-      const Error(
-        ValidationFailure('Changing user status is not supported yet'),
-      );
+      guardResult(() => dataSource.updateUserStatus(id, status));
 
   @override
   Future<Result<AppUser>> setUserRole(String id, UserRole role) =>

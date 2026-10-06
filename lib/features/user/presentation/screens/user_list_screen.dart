@@ -34,8 +34,6 @@ Color statusColor(UserStatus status) {
       return AppColors.success;
     case UserStatus.inactive:
       return AppColors.textSecondary;
-    case UserStatus.suspended:
-      return AppColors.error;
   }
 }
 

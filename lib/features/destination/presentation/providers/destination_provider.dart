@@ -69,17 +69,17 @@ class DestinationListController extends AsyncNotifier<List<Destination>> {
     );
   }
 
-  Future<String?> setStatus(String id, DestinationStatus status) async {
-    final repo = ref.read(destinationRepositoryProvider);
-    final result = await repo.setStatus(id, status);
-    return result.when(
-      success: (_) {
-        refresh();
-        return null;
-      },
-      failure: (f) => f.message,
-    );
-  }
+  // Future<String?> setStatus(String id, DestinationStatus status) async {
+  //   final repo = ref.read(destinationRepositoryProvider);
+  //   final result = await repo.setStatus(id, status);
+  //   return result.when(
+  //     success: (_) {
+  //       refresh();
+  //       return null;
+  //     },
+  //     failure: (f) => f.message,
+  //   );
+  // }
 }
 
 final destinationListControllerProvider =

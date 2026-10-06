@@ -18,6 +18,15 @@ class ApiJson {
     }
     return fallback ?? DateTime.now();
   }
+  static DateTime? localDateTime(dynamic value) {
+  if (value == null) return null;
+
+  if (value is String && value.isNotEmpty) {
+    return DateTime.tryParse(value)?.toLocal();
+  }
+
+  return null;
+}
 
  
   static String localDate(DateTime value) =>

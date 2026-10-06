@@ -1,7 +1,5 @@
-// ignore_for_file: constant_identifier_names
 
 import 'package:dio/dio.dart';
-
 import '../../../../core/entities/user_role.dart';
 import '../../../../core/entities/user_status.dart';
 import '../../../../core/network/api_json.dart';
@@ -9,11 +7,10 @@ import '../../../../core/network/base_api_service.dart';
 import '../../../../core/network/http_method.dart';
 import '../../../auth/data/models/app_user_model.dart';
 
-/// `/users` endpoints of the tour-management API.
-///
-/// Each `UserProfileResponse` carries the user's Keycloak realm role.
+
 class UserRemoteDataSource {
   static const String _USERS = "/users";
+  static const String _STATUS = "/status";
   static const String _IMAGE = "/image";
   static const String _ROLE = "/role";
 
@@ -123,6 +120,16 @@ class UserRemoteDataSource {
       path: '$_USERS/$id$_ROLE',
       method: HTTPMethod.PATCH,
       data: {'role': role.name},
+      onSuccess: (r) => _user(BaseApiService.dataOf(r)),
+    );
+  }
+
+  // updates the user's status in the profile row,
+  Future<AppUserModel> updateUserStatus(String id, UserStatus status) {
+    return api.onRequest(
+      path: '$_USERS/$id$_STATUS',
+      method: HTTPMethod.PATCH,
+      data: {'status': status.name.toUpperCase()},
       onSuccess: (r) => _user(BaseApiService.dataOf(r)),
     );
   }

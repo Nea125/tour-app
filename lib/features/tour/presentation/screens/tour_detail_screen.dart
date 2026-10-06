@@ -43,6 +43,21 @@ class _TourDetailScreenState extends ConsumerState<TourDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
+    Future.microtask(() {
+      if (!mounted) return;
+
+      // Refresh tour information
+      ref.invalidate(tourByIdProvider(widget.tourId));
+      // Refresh rating
+      ref.invalidate(averageRatingForTourProvider(widget.tourId));
+
+      // Refresh reviews
+      ref.invalidate(reviewsByTourProvider(widget.tourId));
+
+      // Refresh schedules
+      ref.invalidate(schedulesByTourProvider(widget.tourId));
+    });
   }
 
   @override
@@ -761,6 +776,7 @@ class _ReviewsTab extends ConsumerWidget {
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -777,7 +793,7 @@ class _ReviewsTab extends ConsumerWidget {
                         return CircleAvatar(
                           radius: 20,
                           backgroundImage: hasProfileImage
-                              ? NetworkImage(user.profileImage!)
+                              ? NetworkImage(user.profileImage)
                               : null,
                           child: !hasProfileImage
                               ? const Icon(Icons.person_outline)
@@ -799,7 +815,6 @@ class _ReviewsTab extends ConsumerWidget {
                         child: Icon(Icons.person_outline),
                       ),
                     ),
-
                     const SizedBox(width: AppSpacing.s10),
 
                     // --------------------------------
@@ -850,83 +865,27 @@ class _ReviewsTab extends ConsumerWidget {
                     // --------------------------------
                     // DATE
                     // --------------------------------
-                    Text(
-                      Formatters.date(review.createdAt),
-                      style: const TextStyle(
-                        fontSize: AppFontSizes.f11,
-                        color: AppColors.textSecondary,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          Formatters.dateTime(review.createdAt),
+                          style: const TextStyle(
+                            fontSize: AppFontSizes.f11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        if (review.updatedAt != null) ...[
+                          Text(
+                            ',Updated: ${Formatters.dateTime(review.updatedAt!)}',
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.f11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-
-                    // --------------------------------
-                    // REPORT
-                    // --------------------------------
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(
-                        Icons.flag_outlined,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      tooltip: 'Report inappropriate review',
-                      onPressed: () async {
-                        final reason = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            final controller = TextEditingController();
-
-                            return AlertDialog(
-                              title: const Text('Report review'),
-
-                              content: TextField(
-                                controller: controller,
-                                maxLines: 3,
-                                decoration: const InputDecoration(
-                                  hintText: 'Why is this review inappropriate?',
-                                ),
-                              ),
-
-                              actions: [
-                                TextButton(
-                                  onPressed: () => context.pop(),
-                                  child: const Text('Cancel'),
-                                ),
-
-                                TextButton(
-                                  onPressed: () => context.pop(controller.text),
-                                  child: const Text('Report'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-
-                        if (reason != null &&
-                            reason.trim().isNotEmpty &&
-                            context.mounted) {
-                          final error = await ref
-                              .read(myReviewsControllerProvider.notifier)
-                              .reportReview(
-                                reviewId: review.id,
-                                reason: reason.trim(),
-                              );
-
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  error ?? 'Review reported. Thank you.',
-                                ),
-                                backgroundColor: error != null
-                                    ? AppColors.error
-                                    : AppColors.success,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
-
                     // --------------------------------
                     // DELETE - ADMIN / MANAGER
                     // --------------------------------
@@ -986,9 +945,20 @@ class _ReviewsTab extends ConsumerWidget {
                 // --------------------------------
                 // REVIEW COMMENT
                 // --------------------------------
-                const SizedBox(height: AppSpacing.s8),
+                // const SizedBox(height: AppSpacing.s8),
 
-                Text(review.comment, style: const TextStyle(height: 1.4)),
+                // Text(review.comment, style: const TextStyle(height: 1.4)),
+                // --------------------------------
+                // REVIEW COMMENT
+                // --------------------------------
+                const SizedBox(height: AppSpacing.s8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 50),
+                  child: Text(
+                    review.comment,
+                    style: const TextStyle(height: 1.4),
+                  ),
+                ),
               ],
             );
           },

@@ -21,12 +21,9 @@ class MyReviewsScreen extends ConsumerWidget {
     final reviewsAsync = ref.watch(myReviewsControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Reviews'),
-      ),
+      appBar: AppBar(title: const Text('My Reviews')),
       body: reviewsAsync.when(
         loading: () => const LoadingWidget(),
-
         error: (e, _) => ErrorView(
           message: e.toString(),
           onRetry: () =>
@@ -52,9 +49,7 @@ class MyReviewsScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final review = reviews[index];
 
-                final tourAsync = ref.watch(
-                  tourByIdProvider(review.tourId),
-                );
+                final tourAsync = ref.watch(tourByIdProvider(review.tourId));
 
                 return Card(
                   child: Padding(
@@ -90,7 +85,7 @@ class MyReviewsScreen extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                Formatters.date(review.createdAt),
+                                Formatters.dateTime(review.createdAt),
                                 style: const TextStyle(
                                   fontSize: AppFontSizes.f11,
                                   color: AppColors.textSecondary,
@@ -98,13 +93,21 @@ class MyReviewsScreen extends ConsumerWidget {
                               ),
                             ),
 
+                            if (review.updatedAt != null) ...[
+                              Expanded(
+                                child: Text(
+                                  ',Updated: ${Formatters.dateTime(review.updatedAt!)}',
+                                  style: const TextStyle(
+                                    fontSize: AppFontSizes.f11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
                             IconButton(
                               visualDensity: VisualDensity.compact,
                               tooltip: 'Edit review',
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 18,
-                              ),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
                               onPressed: () =>
                                   _editReview(context, ref, review),
                             ),
@@ -139,9 +142,7 @@ class MyReviewsScreen extends ConsumerWidget {
     WidgetRef ref,
     Review review,
   ) async {
-    final commentController = TextEditingController(
-      text: review.comment,
-    );
+    final commentController = TextEditingController(text: review.comment);
 
     double rating = review.rating.toDouble();
 
@@ -167,25 +168,20 @@ class MyReviewsScreen extends ConsumerWidget {
                   TextField(
                     controller: commentController,
                     maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Comment',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Comment'),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
-                  onPressed: () =>
-                      Navigator.of(dialogContext).pop(),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text('Cancel'),
                 ),
 
                 TextButton(
                   onPressed: () async {
                     final error = await ref
-                        .read(
-                          myReviewsControllerProvider.notifier,
-                        )
+                        .read(myReviewsControllerProvider.notifier)
                         .updateReview(
                           id: review.id,
                           rating: rating.round(),
@@ -213,8 +209,6 @@ class MyReviewsScreen extends ConsumerWidget {
         );
       },
     );
-
-    commentController.dispose();
   }
 
   Future<void> _deleteReview(
@@ -227,21 +221,15 @@ class MyReviewsScreen extends ConsumerWidget {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Delete Review'),
-          content: const Text(
-            'Are you sure you want to delete this review?',
-          ),
+          content: const Text('Are you sure you want to delete this review?'),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.of(dialogContext).pop(false),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () =>
-                  Navigator.of(dialogContext).pop(true),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
               child: const Text('Delete'),
             ),
           ],
@@ -263,16 +251,11 @@ class MyReviewsScreen extends ConsumerWidget {
 
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Review deleted successfully'),
-        ),
+        const SnackBar(content: Text('Review deleted successfully')),
       );
     }
   }

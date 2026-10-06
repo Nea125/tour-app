@@ -55,7 +55,14 @@ class _DestinationDetailScreenState
           final toursAsync = ref.watch(
             toursByDestinationProvider(widget.destinationId),
           );
-          final images = <String>[destination.imageUrl];
+
+          // All of the destination's own images first (fallback: the cover),
+          // then any extra photos from its tours.
+          final images = <String>[
+            ...destination.images.isNotEmpty
+                ? destination.images
+                : [destination.imageUrl],
+          ];
           for (final tour in toursAsync.valueOrNull ?? const []) {
             for (final url in tour.images) {
               if (!images.contains(url)) images.add(url);
@@ -76,35 +83,6 @@ class _DestinationDetailScreenState
                             AppRoutes.destinationForm,
                             extra: destination,
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            destination.status == DestinationStatus.active
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                          onPressed: () async {
-                            final newStatus =
-                                destination.status == DestinationStatus.active
-                                ? DestinationStatus.inactive
-                                : DestinationStatus.active;
-                            final error = await ref
-                                .read(
-                                  destinationListControllerProvider.notifier,
-                                )
-                                .setStatus(destination.id, newStatus);
-                            ref.invalidate(
-                              destinationByIdProvider(widget.destinationId),
-                            );
-                            if (context.mounted && error != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(error),
-                                  backgroundColor: AppColors.error,
-                                ),
-                              );
-                            }
-                          },
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline_rounded),
@@ -168,7 +146,31 @@ class _DestinationDetailScreenState
                             )
                             .toList(),
                       ),
-                      if (images.length > 1)
+                      if (images.length > 1) ...[
+                        // Counter, e.g. 2 / 5
+                        Positioned(
+                          bottom: 28,
+                          right: 16,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_currentImagePage + 1} / ${images.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Dots
                         Positioned(
                           bottom: 12,
                           left: 0,
@@ -194,6 +196,7 @@ class _DestinationDetailScreenState
                             }),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -315,7 +318,10 @@ class _DestinationDetailScreenState
                                   leading: ClipRRect(
                                     borderRadius: BorderRadius.circular(10),
                                     child: AppNetworkImage(
-                                      url: tour.images.first,
+                                      // Guard: a tour may have no images.
+                                      url: tour.images.isEmpty
+                                          ? ''
+                                          : tour.images.first,
                                       width: AppSpacing.s64,
                                       height: AppSpacing.s64,
                                     ),

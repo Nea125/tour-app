@@ -9,11 +9,11 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../domain/entities/destination.dart';
 import '../../domain/entities/destination_status.dart';
 import '../providers/destination_provider.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_text_styles.dart';
 
 class DestinationListScreen extends ConsumerWidget {
   const DestinationListScreen({super.key});
@@ -24,6 +24,7 @@ class DestinationListScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final canManage =
         user?.role == UserRole.ADMIN || user?.role == UserRole.MANAGER;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -31,13 +32,15 @@ class DestinationListScreen extends ConsumerWidget {
         actions: [
           if (canManage)
             IconButton(
-              icon: const Icon(Icons.add_rounded),
+              tooltip: 'Add destination',
+              icon: const Icon(Icons.add_location_alt_rounded),
               onPressed: () => context.push(AppRoutes.destinationForm),
             ),
         ],
       ),
       body: Column(
         children: [
+          // Header + search
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.s16,
@@ -45,14 +48,33 @@ class DestinationListScreen extends ConsumerWidget {
               AppSpacing.s16,
               AppSpacing.s8,
             ),
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Search destinations, provinces, countries...',
-                prefixIcon: Icon(Icons.search_rounded),
-              ),
-              onChanged: (value) =>
-                  ref.read(destinationSearchQueryProvider.notifier).state =
-                      value,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Where to next?',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Explore places and plan your next trip',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search destinations, provinces, countries...',
+                    prefixIcon: Icon(Icons.search_rounded),
+                  ),
+                  onChanged: (value) =>
+                      ref.read(destinationSearchQueryProvider.notifier).state =
+                          value,
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -76,76 +98,22 @@ class DestinationListScreen extends ConsumerWidget {
                       .read(destinationListControllerProvider.notifier)
                       .refresh(),
                   child: GridView.builder(
+                    // Needed so pull-to-refresh works with few items.
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.s16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 14,
                           crossAxisSpacing: 14,
-                          childAspectRatio: 0.8,
+                          childAspectRatio: 0.78,
                         ),
                     itemCount: destinations.length,
                     itemBuilder: (context, index) {
                       final d = destinations[index];
-                      return GestureDetector(
+                      return _DestinationCard(
+                        destination: d,
                         onTap: () => context.push(AppRoutes.destination(d.id)),
-                        child: Card(
-                          clipBehavior: Clip.antiAlias,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    AppNetworkImage(
-                                      url: d.imageUrl,
-                                      width: double.infinity,
-                                      borderRadius: BorderRadius.zero,
-                                      placeholderIcon: Icons.landscape_rounded,
-                                    ),
-                                    if (d.status == DestinationStatus.inactive)
-                                      Positioned(
-                                        top: 8,
-                                        left: 8,
-                                        child: StatusBadge(
-                                          label: 'Inactive',
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(AppSpacing.s10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      d.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: AppFontSizes.f15,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: AppSpacing.s2),
-                                    Text(
-                                      '${d.province}, ${d.country}',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: AppFontSizes.f12,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       );
                     },
                   ),
@@ -154,6 +122,153 @@ class DestinationListScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Photo card: full-bleed cover, gradient overlay with name and location,
+/// and a badge showing how many photos the destination has.
+class _DestinationCard extends StatelessWidget {
+  const _DestinationCard({required this.destination, required this.onTap});
+
+  final Destination destination;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = destination;
+    final photoCount = d.images.isNotEmpty
+        ? d.images.length
+        : (d.imageUrl.isNotEmpty ? 1 : 0);
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 3,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Cover image
+              AppNetworkImage(
+                url: d.imageUrl,
+                width: double.infinity,
+                borderRadius: BorderRadius.zero,
+                placeholderIcon: Icons.landscape_rounded,
+              ),
+
+              // Bottom gradient for text readability
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0.45, 1.0],
+                    colors: [Colors.transparent, Color(0xCC000000)],
+                  ),
+                ),
+              ),
+
+              // Photo count badge (top right)
+              if (photoCount > 1)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.photo_library_rounded,
+                          size: 13,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$photoCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Inactive badge (top left)
+              if (d.status == DestinationStatus.inactive)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: StatusBadge(
+                    label: 'Inactive',
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+              // Name + location (bottom)
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      d.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 14,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            '${d.province}, ${d.country}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

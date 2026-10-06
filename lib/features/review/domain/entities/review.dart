@@ -8,7 +8,7 @@ class Review extends Equatable {
   final int rating;
   final String comment;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   const Review({
     required this.id,

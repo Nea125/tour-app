@@ -8,5 +8,4 @@ abstract class DestinationRepository {
   Future<Result<Destination>> createDestination(Destination destination);
   Future<Result<Destination>> updateDestination(Destination destination);
   Future<Result<void>> deleteDestination(String id);
-  Future<Result<Destination>> setStatus(String id, DestinationStatus status);
 }

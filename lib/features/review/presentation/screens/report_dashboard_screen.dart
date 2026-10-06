@@ -13,11 +13,25 @@ import '../providers/report_provider.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
-class ReportDashboardScreen extends ConsumerWidget {
+class ReportDashboardScreen extends ConsumerStatefulWidget {
   const ReportDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReportDashboardScreen> createState() => _ReportDashboardScreenState();
+}
+
+class _ReportDashboardScreenState extends ConsumerState<ReportDashboardScreen> {
+  @override
+ void initState() {
+    super.initState();
+      Future.microtask(() {
+      if (mounted) {
+        ref.invalidate(reportSummaryProvider);
+      }
+    });
+  }
+  @override
+  Widget build(BuildContext context ) {
     final reportAsync = ref.watch(reportSummaryProvider);
 
     return Scaffold(

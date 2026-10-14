@@ -139,9 +139,8 @@ class DestinationModel extends Destination {
   /// uploaded image becomes an entry in [images]; the first is the cover.
   factory DestinationModel.fromApi(Map<String, dynamic> json) {
     final id = ApiJson.id(json['id']);
-    final imageIds = json['imageIds'] as List? ?? const [];
     final imageUrls = <String>[
-      for (final imageId in imageIds)
+      for (final imageId in ApiJson.imageIds(json))
         ApiJson.mediaUrl('destinations', id, imageId),
     ];
     final now = DateTime.now();

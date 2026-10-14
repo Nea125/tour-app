@@ -16,7 +16,6 @@ import '../../../booking/presentation/screens/my_bookings_screen.dart';
 import '../../../destination/presentation/providers/destination_provider.dart';
 import '../../../guide/presentation/providers/guide_provider.dart';
 import '../../../review/presentation/providers/report_provider.dart';
-import '../../../review/presentation/providers/review_provider.dart';
 import '../../../schedule/presentation/providers/schedule_provider.dart';
 import '../../../tour/presentation/providers/tour_provider.dart';
 import '../../../../core/router/app_routes.dart';
@@ -48,12 +47,17 @@ class _CustomerHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final destinationsAsync = ref.watch(destinationListControllerProvider);
-    final toursAsync = ref.watch(tourListControllerProvider);
+    final popularAsync = ref.watch(popularToursProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
+        ref.invalidate(popularToursProvider);
         await ref.read(destinationListControllerProvider.notifier).refresh();
-        await ref.read(tourListControllerProvider.notifier).refresh();
+        try {
+          await ref.read(popularToursProvider.future);
+        } catch (_) {
+          // The error is shown by the section itself.
+        }
       },
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.s16),
@@ -122,15 +126,21 @@ class _CustomerHome extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.s12),
           const SectionHeader(title: 'Popular Tours'),
-          toursAsync.when(
+          // Popular tours come from GET /tours/popular: the backend picks
+          // them by average rating and review count.
+          popularAsync.when(
             loading: () => const LoadingWidget(),
             error: (e, _) => ErrorView(message: e.toString()),
-            data: (tours) {
+            data: (items) {
+              if (items.isEmpty) {
+                return const Text(
+                  'No popular tours yet.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                );
+              }
               return Column(
-                children: tours.take(5).map((tour) {
-                  final ratingAsync = ref.watch(
-                    averageRatingForTourProvider(tour.id),
-                  );
+                children: items.map((item) {
+                  final tour = item.tour;
                   return Card(
                     margin: const EdgeInsets.only(bottom: AppSpacing.s10),
                     child: ListTile(
@@ -139,7 +149,7 @@ class _CustomerHome extends ConsumerWidget {
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: AppNetworkImage(
-                          url: tour.images.first,
+                          url: tour.images.isNotEmpty ? tour.images.first : '',
                           width: AppSpacing.s60,
                           height: AppSpacing.s60,
                         ),
@@ -153,10 +163,21 @@ class _CustomerHome extends ConsumerWidget {
                       subtitle: Text(
                         '${tour.durationDays}D${tour.durationNights}N • ${Formatters.currency(tour.price)}',
                       ),
-                      trailing: ratingAsync.when(
-                        data: (r) => RatingStars(rating: r, size: 13),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, _) => const SizedBox.shrink(),
+                      trailing: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          RatingStars(rating: item.averageRating, size: 13),
+                          const SizedBox(height: AppSpacing.s2),
+                          Text(
+                            '${item.reviewCount} reviews',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: AppFontSizes.f11,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

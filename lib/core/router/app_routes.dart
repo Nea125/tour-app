@@ -71,4 +71,9 @@ static String bookingParticipants(String id) =>
   static const adminCreateUser = '/admin/create-user';
   static const adminReports = '/admin/reports';
   static const adminBookings = '/admin/bookings';
+// ---------------- Participants ----------------
+  static const updateParticipantPath =
+    '/bookings/:bookingId/participants/:participantId/edit';
+static String updateParticipant(String bookingId, String participantId) =>
+    '/bookings/$bookingId/participants/$participantId/edit';
 }

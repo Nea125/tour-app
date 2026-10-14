@@ -83,20 +83,23 @@ class MyReviewsScreen extends ConsumerWidget {
 
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                Formatters.dateTime(review.createdAt),
-                                style: const TextStyle(
-                                  fontSize: AppFontSizes.f11,
-                                  color: AppColors.textSecondary,
+                            //Show created at wehen updated at is null, otherwise show updated at
+                            if (review.updatedAt == null) ...[
+                              Expanded(
+                                child: Text(
+                                  Formatters.dateTime(review.createdAt),
+                                  style: const TextStyle(
+                                    fontSize: AppFontSizes.f11,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
 
                             if (review.updatedAt != null) ...[
                               Expanded(
                                 child: Text(
-                                  ',Updated: ${Formatters.dateTime(review.updatedAt!)}',
+                                  'Edited: ${Formatters.dateTime(review.updatedAt!)}',
                                   style: const TextStyle(
                                     fontSize: AppFontSizes.f11,
                                     color: AppColors.textSecondary,

@@ -30,8 +30,6 @@ class BookingModel extends Booking {
     );
   }
 
-  /// From the backend's `BookingResponse` (no special request or
-  /// timestamps; `bookingDate` stands in for both).
   factory BookingModel.fromApi(Map<String, dynamic> json) {
     final bookingDate = ApiJson.date(json['bookingDate']);
     return BookingModel(

@@ -12,7 +12,6 @@ import '../models/destination_model.dart';
 class DestinationRemoteDataSource {
   static const String _DESTINATIONS = "/destinations";
   static const String _SEARCH = "/destinations/search";
-  static const String _IMAGES = "/images";
 
   final BaseApiService api;
   DestinationRemoteDataSource(this.api);
@@ -80,38 +79,30 @@ Future<DestinationModel> createDestination(Destination d) async {
   );
 }
 
-  /// Patches the fields, then replaces the cover image when a new one was
-  /// picked on-device.
+  /// Patches the fields and, in the same multipart request, replaces every
+  /// image swapped for a new on-device photo. Each replaced image keeps its
+  /// id and sort order, so it stays in the same position.
   Future<DestinationModel> updateDestination(Destination d) async {
-    final imageIds = await api.onRequest(
+    final current = await getDestinationById(d.id);
+    final form = FormData.fromMap({
+      'name': d.name,
+      'description': d.description,
+      'province': d.province,
+      'country': d.country,
+      'latitude': d.latitude,
+      'longitude': d.longitude,
+    });
+    final images = d.images.isNotEmpty ? d.images : [d.imageUrl];
+    final replaced =
+        await ApiJson.addReplacedImages(form, images, current.images);
+    final updated = await api.onRequest(
       path: '$_DESTINATIONS/${d.id}',
       method: HTTPMethod.PATCH,
-      data: {
-        'name': d.name,
-        'description': d.description,
-        'province': d.province,
-        'country': d.country,
-        'latitude': d.latitude,
-        'longitude': d.longitude,
-      },
-      onSuccess: (r) =>
-          BaseApiService.dataOf(r)['imageIds'] as List? ?? const [],
+      data: form,
+      onSuccess: (r) => DestinationModel.fromApi(BaseApiService.dataOf(r)),
     );
-    if (ApiJson.isLocalFile(d.imageUrl)) {
-      if (imageIds.isEmpty) {
-        throw Exception(
-          'This destination has no image to replace; the API only accepts '
-          'images when a destination is created',
-        );
-      }
-      await api.onRequest(
-        path: '$_DESTINATIONS/${d.id}$_IMAGES/${imageIds.first}',
-        method: HTTPMethod.PUT,
-        data: FormData.fromMap({'image': await ApiJson.file(d.imageUrl)}),
-        onSuccess: (_) {},
-      );
-    }
-    return getDestinationById(d.id);
+    ApiJson.evictImages(replaced);
+    return updated;
   }
 
   Future<void> deleteDestination(String id) {

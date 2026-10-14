@@ -33,7 +33,7 @@ class DestinationListScreen extends ConsumerWidget {
           if (canManage)
             IconButton(
               tooltip: 'Add destination',
-              icon: const Icon(Icons.add_location_alt_rounded),
+              icon: const Icon(Icons.add_rounded),
               onPressed: () => context.push(AppRoutes.destinationForm),
             ),
         ],

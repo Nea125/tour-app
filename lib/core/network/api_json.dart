@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/painting.dart';
 
 import '../constants/keycloak_config.dart';
 import '../storage/token_storage.dart';
@@ -51,9 +52,46 @@ class ApiJson {
   static String enumName(dynamic value) =>
       (value as String? ?? '').toLowerCase();
 
-  /// Image served by `GET /{resource}/{ownerId}/media/{imageId}`.
   static String mediaUrl(String resource, String ownerId, dynamic imageId) =>
       '${KeycloakConfig.apiBaseUrl}/$resource/$ownerId/media/$imageId';
+
+  /// Media ids of a response, in display order. Reads `images`
+  /// (`[{id, sortOrder}]`) and falls back to a flat `imageIds` list.
+  static List<dynamic> imageIds(Map<String, dynamic> json) {
+    final images = json['images'] as List?;
+    if (images == null) return json['imageIds'] as List? ?? const [];
+    final sorted = images.whereType<Map>().toList()
+      ..sort(
+        (a, b) => integer(a['sortOrder']).compareTo(integer(b['sortOrder'])),
+      );
+    return [for (final image in sorted) image['id']];
+  }
+
+  /// Media id at the end of a [mediaUrl].
+  static String mediaIdOf(String url) => url.split('/').last;
+
+
+  static Future<List<String>> addReplacedImages(
+    FormData form,
+    List<String> images,
+    List<String> serverImages,
+  ) async {
+    final replaced = <String>[];
+    for (var i = 0; i < images.length && i < serverImages.length; i++) {
+      if (!isLocalFile(images[i])) continue;
+      form.fields.add(MapEntry('imageIds', mediaIdOf(serverImages[i])));
+      form.files.add(MapEntry('images', await file(images[i])));
+      replaced.add(serverImages[i]);
+    }
+    return replaced;
+  }
+
+
+  static void evictImages(Iterable<String> urls) {
+    for (final url in urls) {
+      NetworkImage(url).evict();
+    }
+  }
 
   static Map<String, String>? imageHeaders(String url) {
     final token = TokenStorage.currentAccessToken;

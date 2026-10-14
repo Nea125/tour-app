@@ -56,18 +56,12 @@ class _DestinationDetailScreenState
             toursByDestinationProvider(widget.destinationId),
           );
 
-          // All of the destination's own images first (fallback: the cover),
-          // then any extra photos from its tours.
-          final images = <String>[
-            ...destination.images.isNotEmpty
-                ? destination.images
-                : [destination.imageUrl],
-          ];
-          for (final tour in toursAsync.valueOrNull ?? const []) {
-            for (final url in tour.images) {
-              if (!images.contains(url)) images.add(url);
-            }
-          }
+          // Only the destination's own images, in sort order (fallback: the
+          // cover). Tour photos belong to their tours and show on the tour
+          // cards below, not in this gallery.
+          final images = destination.images.isNotEmpty
+              ? destination.images
+              : [destination.imageUrl];
           return CustomScrollView(
             slivers: [
               SliverAppBar(
@@ -78,14 +72,20 @@ class _DestinationDetailScreenState
                 actions: canManage
                     ? [
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined),
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.secondary,
+                          ),
                           onPressed: () => context.push(
                             AppRoutes.destinationForm,
                             extra: destination,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                          ),
                           onPressed: () async {
                             final confirmed = await showDialog<bool>(
                               context: context,

@@ -53,7 +53,7 @@ class TourModel extends Tour {
           ? TourStatus.inactive
           : TourStatus.active,
       images: [
-        for (final imageId in json['imageIds'] as List? ?? const [])
+        for (final imageId in ApiJson.imageIds(json))
           ApiJson.mediaUrl('tours', id, imageId),
       ],
       createdAt: now,

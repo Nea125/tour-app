@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/base_api_service.dart';
 import '../../data/datasources/tour_remote_datasource.dart';
 import '../../data/repositories/tour_repository_impl.dart';
+import '../../domain/entities/popular_tour.dart';
 import '../../domain/entities/tour.dart';
 import '../../domain/entities/tour_status.dart';
 import '../../domain/repositories/tour_repository.dart';
@@ -35,6 +36,7 @@ class TourListController extends AsyncNotifier<List<Tour>> {
     await future;
     ref.invalidate(tourByIdProvider);
     ref.invalidate(toursByDestinationProvider);
+    ref.invalidate(popularToursProvider);
   }
 
   Future<String?> createTour(Tour tour) async {
@@ -103,5 +105,12 @@ final toursByDestinationProvider = FutureProvider.family<List<Tour>, String>((
 ) async {
   final repo = ref.watch(tourRepositoryProvider);
   final result = await repo.getTours(destinationId: destinationId);
+  return result.when(success: (t) => t, failure: (f) => throw f);
+});
+
+
+final popularToursProvider = FutureProvider<List<PopularTour>>((ref) async {
+  final repo = ref.watch(tourRepositoryProvider);
+  final result = await repo.getPopularTours();
   return result.when(success: (t) => t, failure: (f) => throw f);
 });

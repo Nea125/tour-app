@@ -37,9 +37,6 @@ class AppUserModel extends AppUser {
     );
   }
 
-  /// Builds a user from the backend's `UserProfileResponse`, which carries
-  /// the Keycloak realm role as `role`. [realmRoles] (from the access token)
-  /// is only a fallback for responses without one.
   factory AppUserModel.fromProfileResponse(
     Map<String, dynamic> json, {
     List<String> realmRoles = const [],
@@ -72,8 +69,6 @@ class AppUserModel extends AppUser {
     );
   }
 
-  /// Most-privileged Keycloak realm role wins; the role names match the
-  /// backend's `UserRole` enum plus the `STAFF` authority in SecurityConfig.
   static UserRole roleFromKeycloak(List<String> realmRoles) {
     final roles = realmRoles.map((r) => r.toUpperCase()).toSet();
     if (roles.contains('ADMIN')) return UserRole.ADMIN;

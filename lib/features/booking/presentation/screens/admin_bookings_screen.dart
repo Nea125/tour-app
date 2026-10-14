@@ -17,19 +17,100 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
-class AdminBookingsScreen extends ConsumerWidget {
+/// Admin / manager screen: all bookings, searchable by booking ID or code
+/// and filterable by status.
+class AdminBookingsScreen extends ConsumerStatefulWidget {
   const AdminBookingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminBookingsScreen> createState() =>
+      _AdminBookingsScreenState();
+}
+
+class _AdminBookingsScreenState extends ConsumerState<AdminBookingsScreen> {
+  late final TextEditingController _searchCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the previous query if the user comes back to this screen.
+    _searchCtrl = TextEditingController(
+      text: ref.read(bookingSearchQueryProvider),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _search(String value) =>
+      ref.read(bookingSearchQueryProvider.notifier).state = value.trim();
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    _search('');
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ---- Role guard: only admin and manager ----
+    if (!ref.watch(canManageBookingsProvider)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('All Bookings')),
+        body: const EmptyView(
+          message: 'You do not have permission to view this page',
+          icon: Icons.lock_outline,
+        ),
+      );
+    }
+
     final bookingsAsync = ref.watch(allBookingsControllerProvider);
     final statusFilter = ref.watch(bookingStatusFilterProvider);
+    final searchQuery = ref.watch(bookingSearchQueryProvider);
     final usersAsync = ref.watch(userListControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('All Bookings')),
       body: Column(
         children: [
+          // ---- Search by booking ID or booking code ----
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s8,
+              AppSpacing.s16,
+              AppSpacing.s4,
+            ),
+            child: TextField(
+              controller: _searchCtrl,
+              textInputAction: TextInputAction.search,
+              onSubmitted: _search,
+              onChanged: (v) {
+                setState(() {}); // refresh the clear button
+                if (v.isEmpty) _search('');
+              },
+              decoration: InputDecoration(
+                hintText: 'Search by booking ID or code',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchCtrl.text.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear',
+                        icon: const Icon(Icons.close),
+                        onPressed: _clearSearch,
+                      ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                isDense: true,
+              ),
+            ),
+          ),
+
+          // ---- Status filter chips ----
           SizedBox(
             height: AppSpacing.s44,
             child: ListView(
@@ -64,6 +145,8 @@ class AdminBookingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+
+          // ---- Results ----
           Expanded(
             child: bookingsAsync.when(
               loading: () => const LoadingWidget(),
@@ -73,11 +156,14 @@ class AdminBookingsScreen extends ConsumerWidget {
                     ref.read(allBookingsControllerProvider.notifier).refresh(),
               ),
               data: (bookings) {
-                if (bookings.isEmpty)
-                  return const EmptyView(
-                    message: 'No bookings found',
+                if (bookings.isEmpty) {
+                  return EmptyView(
+                    message: searchQuery.isEmpty
+                        ? 'No bookings found'
+                        : 'No booking matches your search',
                     icon: Icons.receipt_long_outlined,
                   );
+                }
                 return RefreshIndicator(
                   onRefresh: () => ref
                       .read(allBookingsControllerProvider.notifier)
@@ -126,7 +212,7 @@ class AdminBookingsScreen extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '$customerName • ${booking.bookingCode}',
+                                      '$customerName • #${booking.id} • ${booking.bookingCode}',
                                       style: const TextStyle(
                                         fontSize: AppFontSizes.f12,
                                       ),

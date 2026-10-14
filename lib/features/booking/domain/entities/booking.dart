@@ -1,4 +1,3 @@
-
 import 'package:equatable/equatable.dart';
 
 enum BookingStatus { pending, paid, cancelled }
@@ -14,8 +13,6 @@ extension BookingStatusX on BookingStatus {
         return 'Cancelled';
     }
   }
-
-
 
   static BookingStatus fromString(String value) {
     switch (value.trim().toLowerCase()) {

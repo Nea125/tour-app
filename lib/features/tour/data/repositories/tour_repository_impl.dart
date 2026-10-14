@@ -1,5 +1,6 @@
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/result.dart';
+import '../../domain/entities/popular_tour.dart';
 import '../../domain/entities/tour.dart';
 import '../../domain/entities/tour_status.dart';
 import '../../domain/repositories/tour_repository.dart';
@@ -38,4 +39,8 @@ class TourRepositoryImpl implements TourRepository {
       ValidationFailure('Changing tour status is not supported yet'),
     );
   }
+
+  @override
+  Future<Result<List<PopularTour>>> getPopularTours() =>
+      guardResult(dataSource.getPopularTours);
 }

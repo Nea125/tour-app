@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/features/schedule/presentation/screens/booking_schedule.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/entities/user_role.dart';
 import '../../../../core/utils/formatters.dart';
@@ -94,12 +95,18 @@ class _TourDetailScreenState extends ConsumerState<TourDetailScreen>
                 actions: canManage
                     ? [
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined),
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.secondary,
+                          ),
                           onPressed: () =>
                               context.push(AppRoutes.tourForm, extra: tour),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                          ),
                           onPressed: () async {
                             final confirmed = await showDialog<bool>(
                               context: context,
@@ -590,6 +597,11 @@ class _SchedulesTab extends ConsumerWidget {
     final schedulesAsync = ref.watch(schedulesByTourProvider(tourId));
     final user = ref.watch(currentUserProvider);
     final isCustomer = user?.role == UserRole.CUSTOMER;
+    final isGuide = user?.role == UserRole.GUIDE;
+    // A guide only sees bookings of the schedules they are assigned to.
+    final myGuide = isGuide
+        ? ref.watch(guideByUserIdProvider(user!.id)).valueOrNull
+        : null;
 
     return Scaffold(
       floatingActionButton: canManage
@@ -619,6 +631,11 @@ class _SchedulesTab extends ConsumerWidget {
               final guideIdsAsync = ref.watch(
                 guideIdsForScheduleProvider(schedule.id),
               );
+              // Admin / manager: every schedule. Guide: only assigned ones.
+              final isAssignedGuide =
+                  myGuide != null &&
+                  (guideIdsAsync.valueOrNull?.contains(myGuide.id) ?? false);
+              final canViewBookings = canManage || isAssignedGuide;
               return Card(
                 margin: const EdgeInsets.only(bottom: AppSpacing.s12),
                 child: Padding(
@@ -710,6 +727,24 @@ class _SchedulesTab extends ConsumerWidget {
                         loading: () => const SizedBox.shrink(),
                         error: (_, _) => const SizedBox.shrink(),
                       ),
+                      // Bookings & participants: admin, manager and assigned guide
+                      if (canViewBookings) ...[
+                        const SizedBox(height: AppSpacing.s10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ScheduleBookingsScreen(
+                                  scheduleId: schedule.id,
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.groups_outlined),
+                            label: const Text('Bookings & Participants'),
+                          ),
+                        ),
+                      ],
                       // check if the user is a customer and the schedule is open and in the future
                       if (isCustomer &&
                           schedule.status == ScheduleStatus.open &&
@@ -868,16 +903,18 @@ class _ReviewsTab extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          Formatters.dateTime(review.createdAt),
-                          style: const TextStyle(
-                            fontSize: AppFontSizes.f11,
-                            color: AppColors.textSecondary,
+                        if (review.updatedAt == null) ...[
+                          Text(
+                            Formatters.dateTime(review.createdAt),
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.f11,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
+                        ],
                         if (review.updatedAt != null) ...[
                           Text(
-                            ',Updated: ${Formatters.dateTime(review.updatedAt!)}',
+                            'Edited: ${Formatters.dateTime(review.updatedAt!)}',
                             style: const TextStyle(
                               fontSize: AppFontSizes.f11,
                               color: AppColors.textSecondary,

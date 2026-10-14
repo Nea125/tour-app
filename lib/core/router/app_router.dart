@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:travel_app/features/booking/presentation/screens/booking_participants_screen.dart';
+import 'package:travel_app/features/booking/presentation/screens/update_participant_screen.dart';
 import 'package:travel_app/features/schedule/presentation/screens/assigned_schedule.dart';
 
 import '../../features/auth/presentation/providers/auth_provider.dart';
@@ -177,6 +178,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           message: state.extra as String?,
         ),
       ),
+      GoRoute(
+  path: AppRoutes.updateParticipantPath,
+  builder: (context, state) => UpdateParticipantScreen(
+    bookingId: state.pathParameters['bookingId']!,
+    participantId: state.pathParameters['participantId']!,
+  ),
+),
       GoRoute(
         path: AppRoutes.addReviewTemplate,
         builder: (context, state) => AddReviewScreen(

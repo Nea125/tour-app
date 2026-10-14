@@ -1,16 +1,16 @@
+import 'package:travel_app/features/booking/data/repositories/booking_repository.dart';
+
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/payment_eligibility.dart';
 import '../../domain/entities/booking.dart';
-import '../../domain/repositories/booking_repository.dart';
 import '../datasources/booking_remote_datasource.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final BookingRemoteDataSource dataSource;
   BookingRepositoryImpl(this.dataSource);
 
-  /// The API only returns the signed-in user's bookings, so [userId] must
-  /// be the current user.
+
   @override
   Future<Result<List<Booking>>> getBookingsForUser(String userId) =>
       guardResult(dataSource.getMyBookings);
@@ -23,8 +23,11 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<Result<Booking>> getBookingById(String id) =>
       guardResult(() => dataSource.getBookingById(id));
 
-  /// The user comes from the access token; the API has no field for a
-  /// special request, so it isn't sent.
+  @override
+  Future<Result<List<Booking>>> getBookingsBySchedule(String scheduleId) =>
+      guardResult(() => dataSource.getBookingsBySchedule(scheduleId));
+
+
   @override
   Future<Result<Booking>> createBooking({
     required String userId,

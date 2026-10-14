@@ -167,7 +167,7 @@ class _Hero extends StatelessWidget {
                     width: 160,
                     height: 160,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   Text(
                     'Tour Explorer',
                     style: theme.textTheme.headlineMedium?.copyWith(

@@ -60,8 +60,8 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       return Error(ValidationFailure(_message(e)));
     }
-    // The account exists now; PKCE still requires the password to be
-    // entered on Keycloak's page, so prefill the username there.
+
+    
     return login(loginHint: userName);
   }
 
@@ -94,8 +94,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<void>> requestPasswordReset(String email) async {
-    // The API has no reset endpoint; Keycloak owns credentials and offers
-    // "Forgot password?" on its own login page.
+
     return const Error(
       ValidationFailure(
         'Tap "Sign In" and use "Forgot password?" on the sign-in page.',

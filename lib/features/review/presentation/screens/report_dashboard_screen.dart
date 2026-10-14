@@ -17,21 +17,23 @@ class ReportDashboardScreen extends ConsumerStatefulWidget {
   const ReportDashboardScreen({super.key});
 
   @override
-  ConsumerState<ReportDashboardScreen> createState() => _ReportDashboardScreenState();
+  ConsumerState<ReportDashboardScreen> createState() =>
+      _ReportDashboardScreenState();
 }
 
 class _ReportDashboardScreenState extends ConsumerState<ReportDashboardScreen> {
   @override
- void initState() {
+  void initState() {
     super.initState();
-      Future.microtask(() {
+    Future.microtask(() {
       if (mounted) {
         ref.invalidate(reportSummaryProvider);
       }
     });
   }
+
   @override
-  Widget build(BuildContext context ) {
+  Widget build(BuildContext context) {
     final reportAsync = ref.watch(reportSummaryProvider);
 
     return Scaffold(

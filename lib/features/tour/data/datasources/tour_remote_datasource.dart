@@ -1,10 +1,9 @@
-// ignore_for_file: constant_identifier_names
-
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_json.dart';
 import '../../../../core/network/base_api_service.dart';
 import '../../../../core/network/http_method.dart';
+import '../../domain/entities/popular_tour.dart';
 import '../../domain/entities/tour.dart';
 import '../models/tour_model.dart';
 
@@ -13,7 +12,7 @@ class TourRemoteDataSource {
   static const String _TOURS = "/tours";
   static const String _SEARCH = "/tours/search";
   static const String _BY_DESTINATION = "/tours/destination";
-  static const String _IMAGES = "/images";
+  static const String _POPULAR = "/tours/popular";
 
   final BaseApiService api;
   TourRemoteDataSource(this.api);
@@ -40,6 +39,23 @@ class TourRemoteDataSource {
     );
   }
 
+
+  Future<List<PopularTour>> getPopularTours() {
+    return api.onRequest(
+      path: _POPULAR,
+      method: HTTPMethod.GET,
+      onSuccess: (r) => BaseApiService.listOf(r)
+          .map(
+            (item) => PopularTour(
+              tour: TourModel.fromApi(item['tour'] as Map<String, dynamic>),
+              averageRating: ApiJson.decimal(item['averageRating']),
+              reviewCount: ApiJson.integer(item['reviewCount']),
+            ),
+          )
+          .toList(),
+    );
+  }
+
   Future<TourModel> getTourById(String id) {
     return api.onRequest(
       path: '$_TOURS/$id',
@@ -48,8 +64,7 @@ class TourRemoteDataSource {
     );
   }
 
-  /// Multipart: the fields plus at least one `images` file picked
-  /// on-device (the API requires images on create).
+
   Future<TourModel> createTour(Tour tour) async {
     final localImages = tour.images.where(ApiJson.isLocalFile).toList();
     if (localImages.isEmpty) {
@@ -75,34 +90,27 @@ class TourRemoteDataSource {
     );
   }
 
-  /// Patches the fields, then replaces the cover (first) image when a new
-  /// one was picked on-device.
   Future<TourModel> updateTour(Tour tour) async {
-    final imageIds = await api.onRequest(
+    final current = await getTourById(tour.id);
+    final form = FormData.fromMap({
+      'destinationId': ?ApiJson.toId(tour.destinationId),
+      'title': tour.title,
+      'description': tour.description,
+      'durationDays': tour.durationDays,
+      'durationNights': tour.durationNights,
+      'maxParticipants': tour.maxParticipants,
+      'price': tour.price,
+    });
+    final replaced =
+        await ApiJson.addReplacedImages(form, tour.images, current.images);
+    final updated = await api.onRequest(
       path: '$_TOURS/${tour.id}',
       method: HTTPMethod.PATCH,
-      data: {
-        'destinationId': ApiJson.toId(tour.destinationId),
-        'title': tour.title,
-        'description': tour.description,
-        'durationDays': tour.durationDays,
-        'durationNights': tour.durationNights,
-        'maxParticipants': tour.maxParticipants,
-        'price': tour.price,
-      },
-      onSuccess: (r) =>
-          BaseApiService.dataOf(r)['imageIds'] as List? ?? const [],
+      data: form,
+      onSuccess: (r) => TourModel.fromApi(BaseApiService.dataOf(r)),
     );
-    final cover = tour.images.isEmpty ? '' : tour.images.first;
-    if (ApiJson.isLocalFile(cover) && imageIds.isNotEmpty) {
-      await api.onRequest(
-        path: '$_TOURS/${tour.id}$_IMAGES/${imageIds.first}',
-        method: HTTPMethod.PUT,
-        data: FormData.fromMap({'image': await ApiJson.file(cover)}),
-        onSuccess: (_) {},
-      );
-    }
-    return getTourById(tour.id);
+    ApiJson.evictImages(replaced);
+    return updated;
   }
 
   Future<void> deleteTour(String id) {

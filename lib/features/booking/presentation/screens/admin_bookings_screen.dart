@@ -131,10 +131,37 @@ class _AdminBookingsScreenState extends ConsumerState<AdminBookingsScreen> {
                   ),
                 ),
                 ...BookingStatus.values.map(
+                  // (s) => Padding(
+                  //   padding: const EdgeInsets.only(right: AppSpacing.s8),
+                  //   child: ChoiceChip(
+                  //     label: Text(s.label),
+                  //     selected: statusFilter == s,
+                  //     onSelected: (_) =>
+                  //         ref.read(bookingStatusFilterProvider.notifier).state =
+                  //             s,
+                  //   ),
+                  // ),
                   (s) => Padding(
                     padding: const EdgeInsets.only(right: AppSpacing.s8),
                     child: ChoiceChip(
                       label: Text(s.label),
+                      backgroundColor: switch (s.label) {
+                        'Pending' => Colors.orange.shade100,
+                        'Paid' => Colors.green.shade100,
+                        'Cancelled' => Colors.red.shade100,
+                        _ => Colors.grey.shade200,
+                      },
+                      selectedColor: switch (s.label) {
+                        'Pending' => Colors.orange,
+                        'Paid' => Colors.green,
+                        'Cancelled' => Colors.red,
+                        _ => Colors.blue,
+                      },
+                      labelStyle: TextStyle(
+                        color: statusFilter == s
+                            ? Colors.white
+                            : Colors.black87,
+                      ),
                       selected: statusFilter == s,
                       onSelected: (_) =>
                           ref.read(bookingStatusFilterProvider.notifier).state =

@@ -175,14 +175,14 @@ class _GuideFormScreenState extends ConsumerState<GuideFormScreen> {
               validator: (v) => Validators.required(v, label: 'Bio'),
             ),
             const SizedBox(height: AppSpacing.s8),
-            DropdownButtonFormField<GuideStatus>(
-              initialValue: _status,
-              decoration: const InputDecoration(labelText: 'Status'),
-              items: GuideStatus.values
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))
-                  .toList(),
-              onChanged: (v) => setState(() => _status = v ?? _status),
-            ),
+            // DropdownButtonFormField<GuideStatus>(
+            //   initialValue: _status,
+            //   decoration: const InputDecoration(labelText: 'Status'),
+            //   items: GuideStatus.values
+            //       .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))
+            //       .toList(),
+            //   onChanged: (v) => setState(() => _status = v ?? _status),
+            // ),
             const SizedBox(height: AppSpacing.s16),
             ElevatedButton(
               onPressed: _submitting ? null : _submit,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:travel_app/core/providers/core_providers.dart';
+import 'package:travel_app/core/storage/token_storage.dart';
 import 'package:travel_app/features/schedule/presentation/screens/booking_schedule.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/entities/user_role.dart';
@@ -534,13 +536,18 @@ class _ItineraryTab extends ConsumerWidget {
                                               SizedBox(
                                                 width: AppSpacing.s90,
                                                 child: Text(
-                                                  '${a.startTime.format(context)} - ${a.endTime.format(context)}',
+                                                  '${a.startTime.format(context)} - ${a.endTime.format(context)}:',
                                                   style: const TextStyle(
                                                     fontSize: AppFontSizes.f11,
                                                     fontWeight: FontWeight.w600,
                                                   ),
+                                                  maxLines: 1,
+                                                  softWrap: false,
+                                                  overflow:
+                                                      TextOverflow.visible,
                                                 ),
                                               ),
+                                              SizedBox(width: 20),
                                               Expanded(
                                                 child: Text(
                                                   '${a.title} — ${a.location}',
@@ -828,7 +835,13 @@ class _ReviewsTab extends ConsumerWidget {
                         return CircleAvatar(
                           radius: 20,
                           backgroundImage: hasProfileImage
-                              ? NetworkImage(user.profileImage)
+                              ? NetworkImage(
+                                  user.profileImage,
+                                  headers: {
+                                    'Authorization':
+                                        'Bearer ${TokenStorage.currentAccessToken}',
+                                  },
+                                )
                               : null,
                           child: !hasProfileImage
                               ? const Icon(Icons.person_outline)

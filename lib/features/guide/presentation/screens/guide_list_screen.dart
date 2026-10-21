@@ -84,16 +84,28 @@ class GuideListScreen extends ConsumerWidget {
                       return Card(
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(AppSpacing.s12),
-                          onTap: () => context.push(AppRoutes.guide(guide.id)),
+                          onTap: () => context.push(AppRoutes.guide(guide.id)),                       
                           leading: userAsync.when(
-                            data: (u) => CircleAvatar(
+                            data: (u) {
+                              final image = u.profileImage;
+
+                              if (image == null || image.trim().isEmpty) {
+                                return const CircleAvatar(
+                                  radius: 28,
+                                  child: Icon(Icons.person),
+                                );
+                              }
+
+                              return CircleAvatar(
+                                radius: 28,
+                                backgroundImage: profileImageProvider(image),
+                              );
+                            },
+                            loading: () => const CircleAvatar(
                               radius: 28,
-                              backgroundImage: profileImageProvider(
-                                u.profileImage,
-                              ),
+                              child: CircularProgressIndicator(),
                             ),
-                            loading: () => const CircleAvatar(radius: 28),
-                            error: (_, _) => const CircleAvatar(
+                            error: (error, stackTrace) => const CircleAvatar(
                               radius: 28,
                               child: Icon(Icons.person),
                             ),

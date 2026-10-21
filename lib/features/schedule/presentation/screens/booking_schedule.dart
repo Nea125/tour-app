@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travel_app/core/utils/profile_image_provider.dart';
 import 'package:travel_app/features/booking/domain/entities/booking.dart';
 import 'package:travel_app/features/booking/presentation/providers/booking_provider.dart';
 import 'package:travel_app/features/booking/presentation/providers/participant_provider.dart';
@@ -14,7 +15,6 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../schedule/presentation/providers/schedule_provider.dart';
 import '../../../user/presentation/providers/user_provider.dart';
-
 
 /// Bookings and their participants for one schedule.
 /// Only ADMIN, MANAGER and GUIDE can open it (also enforced by the backend).
@@ -60,14 +60,7 @@ class ScheduleBookingsScreen extends ConsumerWidget {
             );
           }
 
-          final paidBookings = bookings
-              .where((b) => b.status == BookingStatus.paid)
-              .toList();
-          final paidPeople = paidBookings.fold<int>(
-            0,
-            (sum, b) => sum + b.numberOfPeople,
-          );
-
+        
           return RefreshIndicator(
             onRefresh: refresh,
             child: ListView(
@@ -85,17 +78,7 @@ class ScheduleBookingsScreen extends ConsumerWidget {
                             '${Formatters.date(scheduleAsync.valueOrNull!.startDate)} → '
                             '${Formatters.date(scheduleAsync.valueOrNull!.endDate)}',
                             style: AppTextStyles.cardTitle,
-                          ),
-                        const SizedBox(height: AppSpacing.s6),
-                        Text(
-                          '${bookings.length} bookings • '
-                          '${paidBookings.length} paid • '
-                          '$paidPeople confirmed travelers',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: AppFontSizes.f12,
-                          ),
-                        ),
+                          ),                   
                       ],
                     ),
                   ),

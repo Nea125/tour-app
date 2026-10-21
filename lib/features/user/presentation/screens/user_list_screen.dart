@@ -102,12 +102,19 @@ class UserListScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(AppSpacing.s14),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundImage: profileImageProvider(
-                                  user.profileImage,
+                              if (user.profileImage == null ||
+                                  user.profileImage!.trim().isEmpty)
+                                const CircleAvatar(
+                                  radius: 24,
+                                  child: Icon(Icons.person),
+                                )
+                              else
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundImage: profileImageProvider(
+                                    user.profileImage,
+                                  ),
                                 ),
-                              ),
                               const SizedBox(width: AppSpacing.s12),
                               Expanded(
                                 child: Column(

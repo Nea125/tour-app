@@ -89,10 +89,10 @@ Future<void> _showActivityDialog(
                     decoration: const InputDecoration(labelText: 'Title'),
                   ),
                   const SizedBox(height: AppSpacing.s12),
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                  ),
+                  // TextField(
+                  //   controller: descController,
+                  //   decoration: const InputDecoration(labelText: 'Description'),
+                  // ),
                   const SizedBox(height: AppSpacing.s12),
                   TextField(
                     controller: locationController,

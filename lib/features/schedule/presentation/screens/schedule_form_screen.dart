@@ -25,8 +25,8 @@ class ScheduleFormScreen extends ConsumerStatefulWidget {
 
 class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  DateTime _startDate = DateTime.now().add(const Duration(days: 14));
-  DateTime _endDate = DateTime.now().add(const Duration(days: 18));
+    DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now().add(Duration(days: 1));
   ScheduleStatus _status = ScheduleStatus.open;
   bool _submitting = false;
 

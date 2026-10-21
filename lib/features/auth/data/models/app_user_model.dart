@@ -64,8 +64,12 @@ class AppUserModel extends AppUser {
       role: apiRole != null && apiRole.isNotEmpty
           ? UserRoleX.fromString(apiRole)
           : roleFromKeycloak(realmRoles),
-      createdAt: now,
-      updatedAt: now,
+        createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : now,
+        updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : now,
     );
   }
 

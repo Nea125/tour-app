@@ -55,9 +55,9 @@ class ItineraryRemoteDataSource {
         'tourId': ApiJson.toId(day.tourId),
         'title': day.title,
         'description': day.description,
-        'timeline': [
-          {'time': '09:00-10:00', 'activity': day.title},
-        ],
+        // 'timeline': [
+        //   {'time': '09:00-10:00', 'activity': day.title},
+        // ],
       },
       onSuccess: (r) =>
           _day(BaseApiService.dataOf(r), dayNumber: day.dayNumber),

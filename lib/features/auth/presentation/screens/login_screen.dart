@@ -159,11 +159,11 @@ class _Hero extends StatelessWidget {
           SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 80),
+              padding: const EdgeInsets.fromLTRB(35, 28, 24, 80),
               child: Column(
                 children: [
                   Image.asset(
-                    'assets/icon/app_icon_foreground.png',
+                    'assets/icon/app_icon.png',
                     width: 160,
                     height: 160,
                   ),

@@ -93,14 +93,25 @@ class ApiJson {
     }
   }
 
+  // static Map<String, String>? imageHeaders(String url) {
+  //   final token = TokenStorage.currentAccessToken;
+  //   if (token == null ||
+  //       !url.startsWith('http://${KeycloakConfig.host}:1403')) {
+  //     return null;
+  //   }
+  //   return {'Authorization': 'Bearer $token'};
+  // }
+
   static Map<String, String>? imageHeaders(String url) {
-    final token = TokenStorage.currentAccessToken;
-    if (token == null ||
-        !url.startsWith('http://${KeycloakConfig.host}:1403')) {
-      return null;
-    }
-    return {'Authorization': 'Bearer $token'};
+  final token = TokenStorage.currentAccessToken;
+
+  if (token == null ||
+      !url.startsWith(KeycloakConfig.apiBaseUrl)) {
+    return null;
   }
+
+  return {'Authorization': 'Bearer $token'};
+}
 
   static bool isLocalFile(String path) =>
       path.isNotEmpty && !path.startsWith('http');

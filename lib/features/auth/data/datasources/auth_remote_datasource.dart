@@ -89,6 +89,8 @@ class AuthRemoteDataSource {
         'phone': phone,
         'password': password,
         'confirmPassword': password,
+        'dateOfBirth': '2000-01-01',
+        'gender':"Male"
       },
       onSuccess: (_) {},
     );

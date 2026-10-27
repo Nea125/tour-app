@@ -82,6 +82,7 @@ class KeycloakAuthService {
       print('azp: ${claims['azp']}');
       print('realm_access: ${claims['realm_access']}');
       print('exp: ${claims['exp']}');
+      print('token :$accessToken');
       print('=========================');
 
       return AuthTokens(

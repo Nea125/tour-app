@@ -38,6 +38,7 @@ class DioClient {
         print('Status: ${error.response?.statusCode}');
         print('Path: ${error.requestOptions.path}');
         print('Response: ${error.response?.data}');
+        print("Error Type :: ${error.type}");
 
   final request = error.requestOptions;
 

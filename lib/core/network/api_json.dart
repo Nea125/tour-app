@@ -102,15 +102,33 @@ class ApiJson {
   //   return {'Authorization': 'Bearer $token'};
   // }
 
-  static Map<String, String>? imageHeaders(String url) {
+//   static Map<String, String>? imageHeaders(String url) {
+//   final token = TokenStorage.currentAccessToken;
+
+//   if (token == null ||
+//       !url.startsWith(KeycloakConfig.apiBaseUrl)) {
+//     return null;
+//   }
+
+//   return {'Authorization': 'Bearer $token'};
+// }
+
+static Map<String, String>? imageHeaders(String url) {
   final token = TokenStorage.currentAccessToken;
+  final uri = Uri.tryParse(url);
+  final apiUri = Uri.tryParse(KeycloakConfig.apiBaseUrl);
 
   if (token == null ||
-      !url.startsWith(KeycloakConfig.apiBaseUrl)) {
+      token.isEmpty ||
+      uri == null ||
+      apiUri == null ||
+      uri.origin != apiUri.origin) {
     return null;
   }
 
-  return {'Authorization': 'Bearer $token'};
+  return {
+    'Authorization': 'Bearer $token',
+  };
 }
 
   static bool isLocalFile(String path) =>

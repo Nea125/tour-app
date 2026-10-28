@@ -76,10 +76,22 @@ class _DestinationDetailScreenState
                             Icons.edit_outlined,
                             color: AppColors.secondary,
                           ),
-                          onPressed: () => context.push(
+                          // onPressed: () => context.push(
+                          //   AppRoutes.destinationForm,
+                          //   extra: destination,
+                          // ),
+                         onPressed: () async {
+                          await context.push(
                             AppRoutes.destinationForm,
                             extra: destination,
-                          ),
+                          );
+
+                          if (!mounted) return;
+
+                          ref.invalidate(
+                            destinationByIdProvider(widget.destinationId),
+                          );
+                        },
                         ),
                         IconButton(
                           icon: const Icon(

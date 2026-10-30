@@ -86,6 +86,10 @@ class MyBookingsScreen extends ConsumerWidget {
                           final tourAsync = ref.watch(
                             tourByIdProvider(schedule.tourId),
                           );
+                          final startDate = schedule.startDate;
+                          final today = DateUtils.dateOnly(DateTime.now());
+
+                          final isFutureSchedule = DateUtils.dateOnly(startDate).isAfter(today);
 
                           return tourAsync.when(
                             data: (tour) => Row(
@@ -152,7 +156,7 @@ class MyBookingsScreen extends ConsumerWidget {
 
                                       // PENDING + CAN PAY
                                       if (booking.status ==
-                                              BookingStatus.pending &&
+                                              BookingStatus.pending && isFutureSchedule &&
                                           (ref
                                                   .watch(
                                                     canPayBookingProvider(
